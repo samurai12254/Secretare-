@@ -1,0 +1,18 @@
+# Qt Creator user files
+*.pro.user
+*.user
+
+# Build directories
+build/
+bin/
+obj/
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# CMake cache
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles/

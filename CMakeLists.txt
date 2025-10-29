@@ -26,6 +26,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         message.h message.cpp
         datetime.h datetime.cpp
         event.h event.cpp
+        simulator.h simulator.cpp
+        conflictresolver.h conflictresolver.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET secretare APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

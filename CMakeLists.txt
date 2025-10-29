@@ -25,12 +25,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         message.h message.cpp
         datetime.h datetime.cpp
-        User.hpp User.cpp
-        MailSystem.hpp
-        Calendar.hpp
-        ReportGenerator.hpp
-        Department.hpp Department.cpp
-
+        event.h event.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET secretare APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

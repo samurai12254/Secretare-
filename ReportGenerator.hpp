@@ -10,7 +10,7 @@
 
 class ReportGenerator {
 private:
-    std::shared_ptr<Calendar> calendar;
+    Calendar* calendar;
     std::unordered_map<std::string, std::string> stats;
     
     // Вспомогательные методы

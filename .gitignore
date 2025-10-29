@@ -16,3 +16,5 @@ desktop.ini
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles/
+
+.vscode

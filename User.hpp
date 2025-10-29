@@ -20,19 +20,19 @@ public:
          const std::string& r, const std::string& d);
 
     // Проверка пароля
-    bool check_password(const std::string& input_password) const;
+    bool CheckPassword(const std::string& input_password) const;
 
     // Проверка возможности редактирования события
-    bool can_edit(const Event& event) const;
+    bool CanEdit(const Event& event) const;
 
     // Сериализация в словарь
-    std::unordered_map<std::string, std::string> to_dict() const;
+    std::unordered_map<std::string, std::string> ToDict() const;
 
     // Геттеры
-    int get_id() const;
-    std::string get_login() const;
-    std::string get_role() const;
-    std::string get_department() const;
+    int GetId() const;
+    std::string GetLogin() const;
+    std::string GetRole() const;
+    std::string GetDepartment() const;
     
 };
 

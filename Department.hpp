@@ -21,22 +21,22 @@ public:
     Department(int id, const std::string& dept_name);
     
     // Основные методы
-    void add_employee(User* user);
-    void add_event(Event* event);
-    void remove_event(Event* event);
+    void AddEmployee(User* user);
+    void AddEvent(Event* event);
+    void RemoveEvent(Event* event);
     
     // Метод get_events с фильтрацией по дате
-    std::vector<Event*> get_events(const int& date = -1) const; //пока ХЗ как храним дату, потом поредачу
+    std::vector<Event*> GetEvents(const int date_start = -1, const int date_end = -1) const; //пока ХЗ как храним дату, потом поредачу
     
     // Геттеры
-    int get_id() const;
-    std::string get_name() const;
-    std::vector<User*> get_employees() const;
+    int GetId() const;
+    std::string GetName() const;
+    std::vector<User*> GetEmployees() const;
     
     
     // Вспомогательные методы
-    size_t get_employee_count() const;
-    size_t get_event_count() const;
-    bool has_employee(int user_id) const;
+    size_t GetEmployeeCount() const;
+    size_t GetEventCount() const;
+    bool HasEmployee(int user_id) const;
 };
 

@@ -1,75 +1,114 @@
-cmake_minimum_required(VERSION 3.16)
+#include "event.h"
 
-    project(tmp1 VERSION 0.1 LANGUAGES CXX)
+// --- Конструкторы ---
+Event::Event() = default;
 
-    set(CMAKE_AUTOUIC ON)
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTORCC ON)
+Event::Event(QString id,
+             QString title,
+             Department* location,
+             QDateTime startTime,
+             QDateTime endTime,
+             QVector<User*> participants,
+             QString importance,
+             QString description,
+             bool isInternal)
+    : id(id),
+      title(title),
+      location(location),
+      startTime(startTime),
+      endTime(endTime),
+      participants(participants),
+      importance(importance),
+      description(description),
+      isInternal(isInternal)
+{}
 
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+// --- Геттеры ---
+QString Event::getId() const { return id; }
+QString Event::getTitle() const { return title; }
+Department* Event::getLocation() const { return location; }
+QDateTime Event::getStartTime() const { return startTime; }
+QDateTime Event::getEndTime() const { return endTime; }
+QVector<User*> Event::getParticipants() const { return participants; }
+QString Event::getImportance() const { return importance; }
+QString Event::getDescription() const { return description; }
+bool Event::getIsInternal() const { return isInternal; }
 
-    find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+// --- Сеттеры ---
+void Event::setTitle(const QString& newTitle) { title = newTitle; }
+void Event::setLocation(Department* newLoc) { location = newLoc; }
+void Event::setStartTime(const QDateTime& newStart) { startTime = newStart; }
+void Event::setEndTime(const QDateTime& newEnd) { endTime = newEnd; }
+void Event::setParticipants(const QVector<User*>& newParts) { participants = newParts; }
+void Event::setImportance(const QString& newImportance) { importance = newImportance; }
+void Event::setDescription(const QString& newDesc) { description = newDesc; }
+void Event::setIsInternal(bool newValue) { isInternal = newValue; }
 
-    set(PROJECT_SOURCES
-            main.cpp
-                mainwindow.cpp
-                    mainwindow.h
-                        mainwindow.ui
-        )
+// --- Управление участниками ---
+bool Event::addParticipant(User* user) {
+    if (!user) return false;
 
-    if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(tmp1
-                          MANUAL_FINALIZATION
-                              ${PROJECT_SOURCES}
-                      backend.h backend.cpp
-                          resources.qrc
+    // Проверяем по ID, чтобы избежать дубликатов
+    for (auto* existing : participants) {
+        if (existing && existing->getId() == user->getId())
+            return false;
+    }
 
-                      )
+    participants.append(user);
+    return true;
+}
 
-# TG_BOT_KEY = 12423264:bot63hyyrh67hhbtrgtvvtTIrygh56gtr
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET tmp1 APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-    else()
-    if(ANDROID)
-    add_library(tmp1 SHARED
-                    ${PROJECT_SOURCES}
-                )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-    else()
-    add_executable(tmp1
-                       ${PROJECT_SOURCES}
-                   )
-    endif()
-    endif()
+bool Event::removeParticipant(User* user) {
+    if (!user) return false;
+    QString targetId = user->getId();
 
-target_link_libraries(tmp1 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+    for (int i = 0; i < participants.size(); ++i) {
+        if (participants[i] && participants[i]->getId() == targetId) {
+            participants.removeAt(i);
+            return true;
+        }
+    }
+    return false;
+}
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-    if(${QT_VERSION} VERSION_LESS 6.1.0)
-    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.tmp1)
-    endif()
-    set_target_properties(tmp1 PROPERTIES
-                              ${BUNDLE_ID_OPTION}
-                          MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-                          MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-                          MACOSX_BUNDLE TRUE
-                              WIN32_EXECUTABLE TRUE
-                          )
+// --- Проверка конфликтов ---
+bool Event::conflictsWith(const Event& other) const {
+    bool overlapTime = (startTime < other.endTime && endTime > other.startTime);
 
-    include(GNUInstallDirs)
-    install(TARGETS tmp1
-                BUNDLE DESTINATION .
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-            )
+    bool sameParticipant = false;
+    for (auto* p : participants) {
+        if (!p) continue;
+        for (auto* q : other.participants)
+            if (q && p->getId() == q->getId()) {
+                sameParticipant = true;
+                break;
+            }
+        if (sameParticipant) break;
+    }
 
-    if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(tmp1)
-    endif()
+    bool sameLocation = (location == other.location);
+
+    return overlapTime && (sameParticipant || sameLocation);
+}
+
+// --- Вспомогательные методы ---
+int Event::durationMinutes() const {
+    return startTime.secsTo(endTime) / 60;
+}
+
+QString Event::formattedStart() const {
+    return startTime.toString("dd.MM.yyyy hh:mm");
+}
+
+QString Event::formattedEnd() const {
+    return endTime.toString("dd.MM.yyyy hh:mm");
+}
+
+QString Event::summary() const {
+    QString locName = (location ? location->getName() : "Неизвестно");
+    return QString("%1 [%2 — %3] (%4)")
+        .arg(title)
+        .arg(formattedStart())
+        .arg(formattedEnd())
+        .arg(locName);
+}

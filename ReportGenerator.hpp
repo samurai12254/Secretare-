@@ -1,40 +1,43 @@
 #pragma once
 
+#include <QString>
+#include <QHash>
+#include <QVector>
+#include <QDateTime>
+#include "calendar.h"
+#include "mailsystem.h"
 
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-#include "Calendar.hpp"
-#include "MailSystem.hpp"
-
-class ReportGenerator {
+class ReportGenerator
+{
 private:
     Calendar* calendar;
-    std::unordered_map<std::string, std::string> stats;
+    MailSystem* mail_system;
+    QHash<QString, QString> stats;
     
     // Вспомогательные методы
-    void CollectEventStatistics();
-    void CollectDepartmentStatistics();
-    void CollectMailStatistics();
-    void CollectConflictStatistics();
+    void collectEventStatistics();
+    void collectDepartmentStatistics();
+    void collectMailStatistics();
+    void collectConflictStatistics();
+    QString formatDuration(const QDateTime& start, const QDateTime& end) const;
 
 public:
     // Конструкторы
     ReportGenerator(Calendar* cal);
-    
+    ReportGenerator(Calendar* cal, MailSystem* mail);
     
     // Основные методы
-    void GenerateSummary();
-    std::string ToText() const;
-    bool ExportToFile(const std::string& filename) const;
+    void generateSummary();
+    QString toText() const;
+    bool exportToFile(const QString& filename, const QString& format = "txt") const;
     
     // Дополнительные методы отчетов
-    std::string GenerateDepartmentReport() const;
-    std::string generateUserActivityReport() const;
-    std::string GenerateEventDistributionReport() const;
+    QString generateDepartmentReport() const;
+    QString generateUserActivityReport() const;
+    QString generateEventDistributionReport() const;
     
     // Геттеры
-    std::unordered_map<std::string, std::string> GetStats() const;
+    QHash<QString, QString> getStats() const;
+    void setCalendar(Calendar* cal);
+    void setMailSystem(MailSystem* mail);
 };
-

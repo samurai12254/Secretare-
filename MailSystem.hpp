@@ -1,49 +1,42 @@
 #pragma once
 
+#include <QHash>
+#include <QVector>
+#include <QString>
+#include <QDateTime>
+#include "message.h"
+#include "user.h"
 
-#include <unordered_map>
-#include <vector>
-#include <memory>
-#include <string>
-//#include "Message.hpp"
-#include "User.hpp"
-
-class Message;
-
-
-
-class MailSystem {
+class MailSystem
+{
 private:
-    std::unordered_map<int, std::vector<std::shared_ptr<Message>>> inbox;
-    std::vector<std::shared_ptr<Message>> outbox;
-    int next_message_id;
-
-    // Вспомогательные методы
-    bool IsDateOlder(const std::string& date1, const std::string& date2) const;
-    void CleanupUserInbox(int user_id);
+    QHash<QString, QVector<Message>> inbox;  // ключ: логин пользователя
+    QVector<Message> outbox;                 // исходящие письма
 
 public:
     // Конструктор
-    MailSystem();
+    MailSystem() = default;
     
     // Основные методы
-    void SendMessage(std::shared_ptr<User> user, const std::string& subject, 
-                     const std::string& text, const std::string& date);
-    void SendMessageToMultiple(const std::vector<std::shared_ptr<User>>& users, 
-                                 const std::string& subject, const std::string& text, 
-                                 const std::string& date);
+    void sendMessage(User* user, const QString& subject, 
+                    const QString& text, const QDateTime& date = QDateTime::currentDateTime());
+    void sendMessageToMultiple(const QVector<User*>& users, const QString& subject, 
+                              const QString& text, const QDateTime& date = QDateTime::currentDateTime());
     
     // Работа с входящими сообщениями
-    std::vector<std::shared_ptr<Message>> GetInbox(std::shared_ptr<User> user) const;
+    QVector<Message> getInbox(User* user) const;
+    QVector<Message> getUnreadMessages(User* user) const;
+    void markMessageAsRead(User* user, int messageIndex);
     
     // Управление сообщениями
-    void ClearOldMessages(const std::string& cutoff_date);
-    void DeleteMessage(User* user, int message_id);
+    void clearOldMessages(const QDateTime& cutoffDate);
+    void deleteMessage(User* user, int messageIndex);
     
     // Статистика
-    int GetMessageCount(User* user) const;
+    int getMessageCount(User* user) const;
+    int getUnreadCount(User* user) const;
+    int getTotalMessages() const;
     
-    
-    
+    // Работа с исходящими
+    QVector<Message> getOutbox() const;
 };
-

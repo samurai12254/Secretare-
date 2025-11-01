@@ -1,42 +1,45 @@
-#ifndef CALENDAR_HPP
-#define CALENDAR_HPP
+#pragma once
 
-#include <vector>
-#include <memory>
-#include <string>
-#include <unordered_map>
-//#include "Event.hpp"
-#include "Department.hpp"
-#include "User.hpp"
+#include <QVector>
+#include <QString>
+#include <QDateTime>
+#include <QHash>
+#include "event.h"
+#include "department.h"
+#include "user.h"
 
-class Calendar {
+class Calendar
+{
 private:
-    std::vector<Event*> events;
-    std::vector<Department*> departments;
+    QVector<Event*> events;
+    QVector<Department*> departments;
     
     // Вспомогательные методы
-    Event* FindEventById(int event_id) const;
-    bool CheckTimeConflict(const Event& event1, const Event& event2) const;
+    Event* findEventById(const QString& event_id) const;
+    bool checkTimeConflict(const Event* event1, const Event* event2) const;
 
 public:
     // Конструктор
     Calendar() = default;
     
     // Основные методы управления событиями
-    void AddEvent(Event* event);
-    void UpdateEvent(int event_id, const std::unordered_map<std::string, std::string>& updates);
-    void RemoveEvent(int event_id);
+    void addEvent(Event* event);
+    void updateEvent(const QString& event_id, const QHash<QString, QString>& updates);
+    void removeEvent(const QString& event_id);
     
     // Методы получения событий
-    std::vector<Event*> GetEventsForDay(const std::string& date) const;
-    std::vector<Event*> GetEventsForUser(User* user) const;
+    QVector<Event*> getEventsForDay(const QDateTime& date) const;
+    QVector<Event*> getEventsForUser(User* user) const;
     
     // Анализ событий
-    std::vector<std::pair<Event*, Event*>> FindConflict() const;
-    void RemovePastEvents(const std::string& current_date);
+    QVector<QPair<Event*, Event*>> findConflicts() const;
+    void removePastEvents(const QDateTime& current_time);
+    
+    // Управление отделами
+    void addDepartment(Department* department);
+    QVector<Department*> getDepartments() const;
     
     // Статистика
-    size_t GetTotalEvents() const;
+    int getTotalEvents() const;
+    int getTotalDepartments() const;
 };
-
-#endif // CALENDAR_HPP

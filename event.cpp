@@ -50,7 +50,7 @@ bool Event::addParticipant(User* user) {
 
     // Проверяем по ID, чтобы избежать дубликатов
     for (auto* existing : participants) {
-        if (existing && existing->getId() == user->getId())
+        if (existing && existing->GetId() == user->GetId())
             return false;
     }
 
@@ -60,10 +60,10 @@ bool Event::addParticipant(User* user) {
 
 bool Event::removeParticipant(User* user) {
     if (!user) return false;
-    QString targetId = user->getId();
+    QString targetId = user->GetId();
 
     for (int i = 0; i < participants.size(); ++i) {
-        if (participants[i] && participants[i]->getId() == targetId) {
+        if (participants[i] && participants[i]->GetId() == targetId) {
             participants.removeAt(i);
             return true;
         }
@@ -79,7 +79,7 @@ bool Event::conflictsWith(const Event& other) const {
     for (auto* p : participants) {
         if (!p) continue;
         for (auto* q : other.participants)
-            if (q && p->getId() == q->getId()) {
+            if (q && p->GetId() == q->GetId()) {
                 sameParticipant = true;
                 break;
             }
@@ -112,3 +112,4 @@ QString Event::summary() const {
         .arg(formattedEnd())
         .arg(locName);
 }
+    

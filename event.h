@@ -5,8 +5,8 @@
 #include <QString>
 #include <QDateTime>
 #include <QVector>
-#include "user.h"
-#include "department.h"
+#include "User.hpp"
+#include "Department.hpp"
 
 /**
  * @brief Класс Event представляет одно календарное событие фирмы.

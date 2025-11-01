@@ -1,51 +1,49 @@
-#include "Department.hpp"
-#include <algorithm>
-#include <iostream>
-
-// Предполагаем, что у Event есть метод get_date()
-// Временная заглушка для компиляции
-class Event {
-public:
-    int get_date() const { return 0; }
-};
+#include "department.h"
+#include "user.h"
+#include "event.h"
 
 // Конструктор
-Department::Department(int id, const std::string& dept_name)
+Department::Department(int id, const QString& dept_name)
     : dept_id(id), name(dept_name) {}
 
 // Добавление сотрудника
-void Department::AddEmployee(User* user) {
+void Department::addEmployee(User* user) {
+    if (!user) return;
+    
     // Проверяем, не добавлен ли уже этот сотрудник
-    if (!HasEmployee(user->GetId())) {
-        employees.push_back(user);
+    if (!hasEmployee(user->getId())) {
+        employees.append(user);
     }
 }
 
 // Добавление события
-void Department::AddEvent(Event* event) {
-    events.push_back(event);
+void Department::addEvent(Event* event) {
+    if (event) {
+        events.append(event);
+    }
 }
 
 // Удаление события
-void Department::RemoveEvent(Event* event) {
-    auto it = std::find(events.begin(), events.end(), event);
-    if (it != events.end()) {
-        events.erase(it);
+void Department::removeEvent(Event* event) {
+    if (event) {
+        int index = events.indexOf(event);
+        if (index != -1) {
+            events.removeAt(index);
+        }
     }
 }
 
 // Получение событий с фильтрацией по дате
-std::vector<Event*> Department::GetEvents(const int date_start, const int date_end) const {
-    if (date_start == -1) {
+QVector<Event*> Department::getEvents(const QDateTime& date) const {
+    if (!date.isValid()) {
         // Если дата не указана, возвращаем все события
         return events;
     } else {
-        // Фильтруем события по дате
-        std::vector<Event*> filtered_events;
-        for (const auto& event : events) {
-            // Предполагаем, что у Event есть метод get_date()
-            if (event->get_date() >=  date_start && event->get_date() <= date_end) {
-                filtered_events.push_back(event);
+        // Фильтруем события по дате (сравниваем только дату, без времени)
+        QVector<Event*> filtered_events;
+        for (Event* event : events) {
+            if (event && event->getStartTime().date() == date.date()) {
+                filtered_events.append(event);
             }
         }
         return filtered_events;
@@ -53,30 +51,34 @@ std::vector<Event*> Department::GetEvents(const int date_start, const int date_e
 }
 
 // Геттеры
-int Department::GetId() const {
+int Department::getId() const {
     return dept_id;
 }
 
-std::string Department::GetName() const {
+QString Department::getName() const {
     return name;
 }
 
-std::vector<User*> Department::GetEmployees() const {
+QVector<User*> Department::getEmployees() const {
     return employees;
 }
 
+QVector<Event*> Department::getAllEvents() const {
+    return events;
+}
+
 // Вспомогательные методы
-size_t Department::GetEmployeeCount() const {
+int Department::getEmployeeCount() const {
     return employees.size();
 }
 
-size_t Department::GetEventCount() const {
+int Department::getEventCount() const {
     return events.size();
 }
 
-bool Department::HasEmployee(int user_id) const {
-    for (const auto& employee : employees) {
-        if (employee->GetId() == user_id) {
+bool Department::hasEmployee(int user_id) const {
+    for (User* employee : employees) {
+        if (employee && employee->getId() == user_id) {
             return true;
         }
     }

@@ -1,42 +1,41 @@
 #pragma once
 
+#include <QString>
+#include <QVector>
+#include <QDateTime>
 
-#include <string>
-#include <vector>
-#include <memory>
-#include "User.hpp"
-
-// Предварительное объявление класса Event
+class User;
 class Event;
 
-class Department {
+class Department
+{
 private:
     int dept_id;
-    std::string name;
-    std::vector<User*> employees;
-    std::vector<Event*> events;
+    QString name;
+    QVector<User*> employees;
+    QVector<Event*> events;
 
 public:
     // Конструктор
-    Department(int id, const std::string& dept_name);
+    Department(int id, const QString& dept_name);
     
     // Основные методы
-    void AddEmployee(User* user);
-    void AddEvent(Event* event);
-    void RemoveEvent(Event* event);
+    void addEmployee(User* user);
+    void addEvent(Event* event);
+    void removeEvent(Event* event);
     
     // Метод get_events с фильтрацией по дате
-    std::vector<Event*> GetEvents(const int date_start = -1, const int date_end = -1) const; //пока ХЗ как храним дату, потом поредачу
+    QVector<Event*> getEvents(const QDateTime& date = QDateTime()) const;
     
     // Геттеры
-    int GetId() const;
-    std::string GetName() const;
-    std::vector<User*> GetEmployees() const;
-    
+    int getId() const;
+    QString getName() const;
+    QVector<User*> getEmployees() const;
+    QVector<Event*> getAllEvents() const;
     
     // Вспомогательные методы
-    size_t GetEmployeeCount() const;
-    size_t GetEventCount() const;
-    bool HasEmployee(int user_id) const;
+    int getEmployeeCount() const;
+    int getEventCount() const;
+    bool hasEmployee(int user_id) const;
 };
-
+    

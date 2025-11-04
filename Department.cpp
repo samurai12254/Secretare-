@@ -1,5 +1,5 @@
-#include "department.h"
-#include "user.h"
+#include "Department.hpp"
+#include "User.hpp"
 #include "event.h"
 
 // Конструктор
@@ -11,7 +11,7 @@ void Department::addEmployee(User* user) {
     if (!user) return;
     
     // Проверяем, не добавлен ли уже этот сотрудник
-    if (!hasEmployee(user->getId())) {
+    if (!hasEmployee(user->GetId())) {
         employees.append(user);
     }
 }
@@ -78,7 +78,7 @@ int Department::getEventCount() const {
 
 bool Department::hasEmployee(int user_id) const {
     for (User* employee : employees) {
-        if (employee && employee->getId() == user_id) {
+        if (employee && employee->GetId() == user_id) {
             return true;
         }
     }

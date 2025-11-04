@@ -1,6 +1,5 @@
 #include "conflictresolver.h"
 
-#include "conflictresolver.h"
 #include <QDebug>
 
 ConflictResolver::ConflictResolver(Calendar* cal) : calendar(cal) {}

@@ -1,4 +1,4 @@
-#include "mailsystem.h"
+#include "MailSystem.hpp"
 #include <QDebug>
 
 // Отправка сообщения пользователю
@@ -6,7 +6,7 @@ void MailSystem::sendMessage(User* user, const QString& subject,
                             const QString& text, const QDateTime& date) {
     if (!user) return;
     
-    QString userLogin = user->getLogin();
+    QString userLogin = user->GetLogin();
     Message message("System", userLogin, subject, text, date);
     
     // Добавляем в inbox пользователя
@@ -32,7 +32,7 @@ void MailSystem::sendMessageToMultiple(const QVector<User*>& users, const QStrin
 QVector<Message> MailSystem::getInbox(User* user) const {
     if (!user) return QVector<Message>();
     
-    QString userLogin = user->getLogin();
+    QString userLogin = QString::fromStdString(user->GetLogin());
     return inbox.value(userLogin, QVector<Message>());
 }
 
@@ -41,7 +41,7 @@ QVector<Message> MailSystem::getUnreadMessages(User* user) const {
     QVector<Message> unreadMessages;
     if (!user) return unreadMessages;
     
-    QString userLogin = user->getLogin();
+    QString userLogin = QString::fromStdString(user->GetLogin());
     if (!inbox.contains(userLogin)) return unreadMessages;
     
     const QVector<Message>& userMessages = inbox[userLogin];
@@ -58,7 +58,7 @@ QVector<Message> MailSystem::getUnreadMessages(User* user) const {
 void MailSystem::markMessageAsRead(User* user, int messageIndex) {
     if (!user) return;
     
-    QString userLogin = user->getLogin();
+    QString userLogin = QString::fromStdString(user->GetLogin());
     if (inbox.contains(userLogin) && messageIndex >= 0 && messageIndex < inbox[userLogin].size()) {
         // Поскольку Message хранится по значению, нам нужно заменить его
         Message message = inbox[userLogin][messageIndex];
@@ -101,7 +101,7 @@ void MailSystem::clearOldMessages(const QDateTime& cutoffDate) {
 void MailSystem::deleteMessage(User* user, int messageIndex) {
     if (!user) return;
     
-    QString userLogin = user->getLogin();
+    QString userLogin = QString::fromStdString(user->GetLogin());
     if (inbox.contains(userLogin) && messageIndex >= 0 && messageIndex < inbox[userLogin].size()) {
         inbox[userLogin].removeAt(messageIndex);
         
@@ -116,7 +116,7 @@ void MailSystem::deleteMessage(User* user, int messageIndex) {
 int MailSystem::getMessageCount(User* user) const {
     if (!user) return 0;
     
-    QString userLogin = user->getLogin();
+    QString userLogin = QString::fromStdString(user->GetLogin());
     return inbox.value(userLogin, QVector<Message>()).size();
 }
 

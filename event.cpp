@@ -60,7 +60,7 @@ bool Event::addParticipant(User* user) {
 
 bool Event::removeParticipant(User* user) {
     if (!user) return false;
-    QString targetId = user->GetId();
+    int targetId = user->GetId();
 
     for (int i = 0; i < participants.size(); ++i) {
         if (participants[i] && participants[i]->GetId() == targetId) {

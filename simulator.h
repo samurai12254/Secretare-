@@ -5,8 +5,8 @@
 #include <QDateTime>
 #include <QVector>
 #include <QSet>
-#include "calendar.h"
-#include "mailsystem.h"
+#include "Calendar.hpp"
+#include "MailSystem.hpp"
 
 class Simulator {
 private:

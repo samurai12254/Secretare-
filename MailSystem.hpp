@@ -5,7 +5,7 @@
 #include <QString>
 #include <QDateTime>
 #include "message.h"
-#include "user.h"
+#include "User.hpp"
 
 class MailSystem
 {

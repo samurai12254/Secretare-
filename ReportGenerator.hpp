@@ -4,8 +4,8 @@
 #include <QHash>
 #include <QVector>
 #include <QDateTime>
-#include "calendar.h"
-#include "mailsystem.h"
+#include "Calendar.hpp"
+#include "MailSystem.hpp"
 
 class ReportGenerator
 {

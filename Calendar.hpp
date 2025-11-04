@@ -5,8 +5,8 @@
 #include <QDateTime>
 #include <QHash>
 #include "event.h"
-#include "department.h"
-#include "user.h"
+#include "Department.hpp"
+#include "User.hpp"
 
 class Calendar
 {

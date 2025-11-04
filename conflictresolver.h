@@ -4,7 +4,7 @@
 #pragma once
 #include <QVector>
 #include "event.h"
-#include "calendar.h"
+#include "Calendar.hpp"
 
 /**
  * @brief Класс ConflictResolver отвечает за обнаружение и разрешение конфликтов между событиями.

@@ -61,9 +61,8 @@ void Calendar::removeEvent(const QString& event_id) {
 }
 
 // Получение событий на определенный день
-QVector<Event*> Calendar::getEventsForDay(const QDateTime& date) const {
+QVector<Event*> Calendar::getEventsForDay(const QDate& target_date) const {
     QVector<Event*> result;
-    QDate target_date = date.date();
     
     for (Event* event : events) {
         if (event && event->getStartTime().date() == target_date) {
@@ -71,6 +70,47 @@ QVector<Event*> Calendar::getEventsForDay(const QDateTime& date) const {
         }
     }
     return result;
+}
+
+QVector<Event*> Calendar::getEventsForPeriod(const QDateTime& startPeriod, const QDateTime& endPeriod) const {
+    QVector<Event*> periodEvents;
+    
+    // Проверяем валидность периода
+    if (!startPeriod.isValid() || !endPeriod.isValid() || startPeriod > endPeriod) {
+        qWarning() << "Некорректный период:" << startPeriod << "-" << endPeriod;
+        return periodEvents;
+    }
+    
+    for (Event* event : events) {
+        if (!event) continue;
+        
+        QDateTime eventStart = event->getStartTime();
+        QDateTime eventEnd = event->getEndTime();
+        
+        // Проверяем пересечение периодов:
+        // Событие попадает в период, если:
+        // - начало события в пределах периода ИЛИ
+        // - конец события в пределах периода ИЛИ  
+        // - событие полностью содержит период
+        bool eventStartsInPeriod = (eventStart >= startPeriod && eventStart <= endPeriod);
+        bool eventEndsInPeriod = (eventEnd >= startPeriod && eventEnd <= endPeriod);
+        bool eventContainsPeriod = (eventStart <= startPeriod && eventEnd >= endPeriod);
+        
+        if (eventStartsInPeriod || eventEndsInPeriod || eventContainsPeriod) {
+            periodEvents.append(event);
+        }
+    }
+    
+    // Сортируем события по времени начала
+    std::sort(periodEvents.begin(), periodEvents.end(), 
+        [](Event* a, Event* b) {
+            if (!a || !b) return false;
+            return a->getStartTime() < b->getStartTime();
+        }
+    );
+    
+    qDebug() << "Найдено событий за период:" << periodEvents.size();
+    return periodEvents;
 }
 
 // Поиск конфликтов (пересечений по времени)
@@ -90,7 +130,7 @@ QVector<QPair<Event*, Event*>> Calendar::findConflicts() const {
 }
 
 // Удаление прошедших событий
-void Calendar::removePastEvents(const QDateTime& current_time) {
+QVector<Event*> Calendar::getPastEvents(const QDateTime& current_time) {
     QVector<Event*> to_remove;
     
     // Собираем события для удаления
@@ -100,12 +140,7 @@ void Calendar::removePastEvents(const QDateTime& current_time) {
         }
     }
     
-    // Удаляем собранные события
-    for (Event* event : to_remove) {
-        removeEvent(event->getId());
-    }
-    
-    qDebug() << "Удалено прошедших событий:" << to_remove.size();
+    return to_remove;
 }
 
 // Получение событий для пользователя

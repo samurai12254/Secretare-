@@ -34,7 +34,7 @@ std::unordered_map<std::string, std::string> User::ToDict() const {
 }
 
 // Геттеры
-int User::GetId() const { 
+QString User::GetId() const { 
     return user_id; 
 }
 

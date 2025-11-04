@@ -2,13 +2,15 @@
 
 #include <string>
 #include <unordered_map>
+#include <QString>
+
 
 // Предварительное объявление класса Event
 class Event;
 
 class User {
 private:
-    int user_id;
+    QString user_id;
     std::string login;
     std::string password;
     std::string role;
@@ -29,7 +31,7 @@ public:
     std::unordered_map<std::string, std::string> ToDict() const;
 
     // Геттеры
-    int GetId() const;
+    QString GetId() const;
     std::string GetLogin() const;
     std::string GetRole() const;
     std::string GetDepartment() const;

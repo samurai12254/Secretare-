@@ -31,7 +31,7 @@ void Simulator::updateCalendar() {
         // учёт участников
         totalParticipantsCount += e->getParticipants().size();
         for (auto* u : e->getParticipants()) {
-            if (u) uniqueParticipants.insert(u->getId());
+            if (u) uniqueParticipants.insert(u->GetId());
         }
     }
 }
@@ -55,7 +55,7 @@ void Simulator::sendReminders() {
             if (!user) continue;
             mailSystem->sendReminder(user, e);
             totalMessagesSent++;        // учитываем каждое сообщение
-            uniqueParticipants.insert(user->getId());
+            uniqueParticipants.insert(user->GetId());
         }
         totalEventsProcessed++;         // каждый обработанный event
         totalParticipantsCount += e->getParticipants().size();

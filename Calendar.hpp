@@ -28,12 +28,14 @@ public:
     void removeEvent(const QString& event_id);
     
     // Методы получения событий
-    QVector<Event*> getEventsForDay(const QDateTime& date) const;
+    QVector<Event*> getEventsForDay(const QDate& date) const;
     QVector<Event*> getEventsForUser(User* user) const;
+    QVector<Event*> getEventsForPeriod(const QDateTime& startPeriod, const QDateTime& endPeriod) const;
     
+
     // Анализ событий
     QVector<QPair<Event*, Event*>> findConflicts() const;
-    void removePastEvents(const QDateTime& current_time);
+    QVector<Event*> getPastEvents(const QDateTime& current_time);
     
     // Управление отделами
     void addDepartment(Department* department);

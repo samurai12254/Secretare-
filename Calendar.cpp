@@ -17,26 +17,26 @@ void Calendar::addEvent(Event* event) {
 }
 
 // Обновление события
-void Calendar::updateEvent(const QString& event_id, const QHash<QString, QString>& updates) {
+void Calendar::updateEvent(const QString& event_id, const QString& new_title, const QString& new_description, 
+    const QString& new_importance, Department* new_location, const QDateTime& new_strart, const QDateTime& new_end, 
+QVector<User*>& new_participiants, bool new_isInternal) {
     Event* event = findEventById(event_id);
     if (!event) {
         qWarning() << "Событие с ID" << event_id << "не найдено";
         return;
     }
     
-    for (auto it = updates.begin(); it != updates.end(); ++it) {
-        const QString& key = it.key();
-        const QString& value = it.value();
-        
-        if (key == "title") {
-            event->setTitle(value);
-        } else if (key == "description") {
-            event->setDescription(value);
-        } else if (key == "importance") {
-            event->setImportance(value);
-        }
-        // Для location и других сложных типов нужна дополнительная логика преобразования
-    }
+    event->setTitle(new_title);
+    event->setDescription(new_description);
+    event->setImportance(new_importance);
+    event->setStartTime(new_strart);
+    event->setEndTime(new_end);
+    event->setParticipants(new_participiants);
+    event->setIsInternal(new_isInternal);
+    event->setLocation(new_location);
+
+    // обновляем все поля
+    
 }
 
 // Удаление события

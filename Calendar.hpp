@@ -24,7 +24,9 @@ public:
     
     // Основные методы управления событиями
     void addEvent(Event* event);
-    void updateEvent(const QString& event_id, const QHash<QString, QString>& updates);
+    void updateEvent(const QString& event_id, const QString& new_title, const QString& new_description, 
+    const QString& new_importance, Department* new_location, const QDateTime& new_strart, const QDateTime& new_end, 
+QVector<User*>& new_participiants, bool new_isInternal);
     void removeEvent(const QString& event_id);
     
     // Методы получения событий

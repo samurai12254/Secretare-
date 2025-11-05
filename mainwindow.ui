@@ -23,25 +23,6 @@
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuSimulator">
-    <property name="title">
-     <string>Simulator</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuMail">
-    <property name="title">
-     <string>Mail</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuCalendar">
-    <property name="title">
-     <string>Calendar</string>
-    </property>
-    <addaction name="separator"/>
-   </widget>
-   <addaction name="menuSimulator"/>
-   <addaction name="menuMail"/>
-   <addaction name="menuCalendar"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

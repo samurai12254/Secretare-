@@ -143,13 +143,15 @@ QVector<Event*> Calendar::getPastEvents(const QDateTime& current_time) {
     return to_remove;
 }
 
+QVector<Event*> Calendar::getAllEvents() const {return events;}
+
 // Получение событий для пользователя
 QVector<Event*> Calendar::getEventsForUser(User* user) const {
     QVector<Event*> user_events;
     
     if (!user) return user_events;
     
-    QString user_dept = user->getDepartment();
+    QString user_dept = user->GetDepartment();
     
     // Находим отдел пользователя
     for (Department* dept : departments) {

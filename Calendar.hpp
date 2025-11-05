@@ -36,7 +36,7 @@ public:
     // Анализ событий
     QVector<QPair<Event*, Event*>> findConflicts() const;
     QVector<Event*> getPastEvents(const QDateTime& current_time);
-    
+    QVector<Event*> getAllEvents() const;
     // Управление отделами
     void addDepartment(Department* department);
     QVector<Department*> getDepartments() const;

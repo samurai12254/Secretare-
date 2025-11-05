@@ -1,12 +1,12 @@
 #include "User.hpp"
 
 // Конструктор
-User::User(int id, const std::string& login_, const std::string& password_, 
-           const std::string& role_, const std::string& department_)
+User::User(QString id, const QString& login_, const QString& password_, 
+           const QString& role_, const QString& department_)
     : user_id(id), login(login_), password(password_), role(role), department(department_) {}
 
 // Проверка пароля
-bool User::CheckPassword(const std::string& input_password) const {
+bool User::CheckPassword(const QString& input_password) const {
     return password == input_password;
 }
 
@@ -23,9 +23,9 @@ bool User::CanEdit(const Event& event) const {
 }
 
 // Сериализация в словарь
-std::unordered_map<std::string, std::string> User::ToDict() const {
+QHash<QString, QString> User::ToDict() const {
     return {
-        {"user_id", std::to_string(user_id)},
+        {"user_id", user_id},
         {"login", login},
         {"password", password},
         {"role", role},
@@ -38,15 +38,15 @@ QString User::GetId() const {
     return user_id; 
 }
 
-std::string User::GetLogin() const { 
+QString User::GetLogin() const { 
     return login; 
 }
 
-std::string User::GetRole() const { 
+QString User::GetRole() const { 
     return role; 
 }
 
-std::string User::GetDepartment() const { 
+QString User::GetDepartment() const { 
     return department; 
 }
 

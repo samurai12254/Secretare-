@@ -23,6 +23,8 @@ public:
     void sendMessageToMultiple(const QVector<User*>& users, const QString& subject, 
                               const QString& text, const QDateTime& date = QDateTime::currentDateTime());
     
+    void sendReminder(User* user, Event* event);
+
     // Работа с входящими сообщениями
     QVector<Message> getInbox(User* user) const;
     QVector<Message> getUnreadMessages(User* user) const;

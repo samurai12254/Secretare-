@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <QString>
-
+#include <QHash>
 
 // Предварительное объявление класса Event
 class Event;
@@ -11,30 +11,30 @@ class Event;
 class User {
 private:
     QString user_id;
-    std::string login;
-    std::string password;
-    std::string role;
-    std::string department;
+    QString login;
+    QString password;
+    QString role;
+    QString department;
 
 public:
     // Конструктор
-    User(int id, const std::string& l, const std::string& p, 
-         const std::string& r, const std::string& d);
+    User(QString id, const QString& l, const QString& p, 
+         const QString& r, const QString& d);
 
     // Проверка пароля
-    bool CheckPassword(const std::string& input_password) const;
+    bool CheckPassword(const QString& input_password) const;
 
     // Проверка возможности редактирования события
     bool CanEdit(const Event& event) const;
 
     // Сериализация в словарь
-    std::unordered_map<std::string, std::string> ToDict() const;
+    QHash<QString, QString> ToDict() const;
 
     // Геттеры
     QString GetId() const;
-    std::string GetLogin() const;
-    std::string GetRole() const;
-    std::string GetDepartment() const;
+    QString GetLogin() const;
+    QString GetRole() const;
+    QString GetDepartment() const;
     
 };
 

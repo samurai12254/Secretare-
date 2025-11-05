@@ -76,7 +76,7 @@ int Department::getEventCount() const {
     return events.size();
 }
 
-bool Department::hasEmployee(int user_id) const {
+bool Department::hasEmployee(const QString& user_id) const {
     for (User* employee : employees) {
         if (employee && employee->GetId() == user_id) {
             return true;

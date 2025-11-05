@@ -36,6 +36,6 @@ public:
     // Вспомогательные методы
     int getEmployeeCount() const;
     int getEventCount() const;
-    bool hasEmployee(int user_id) const;
+    bool hasEmployee(const QString& user_id) const;
 };
     

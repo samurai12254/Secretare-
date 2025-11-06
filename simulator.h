@@ -27,11 +27,19 @@ public:
 
     void run();
 
-    // --- Методы для статистики ---
-    int getTotalMessagesSent() const { return totalMessagesSent; }
+    // --- Методы для статистики ---    int getTotalMessagesSent() const { return totalMessagesSent; }
+
     int getTotalEventsProcessed() const { return totalEventsProcessed; }
     int getUniqueParticipantsCount() const { return uniqueParticipants.size(); }
     int getTotalParticipantsCount() const { return totalParticipantsCount; }
+
+    void setCalendar(Calendar* newCalendar) { calendar = newCalendar; }
+    void setMailSystem(MailSystem* newMailSystem) { mailSystem = newMailSystem; }
+    void setCurrentTime(const QDateTime& newTime) { currentTime = newTime; }
+    void setEndTime(const QDateTime& newEndTime) { endTime = newEndTime; }
+    void setStepMinutes(int newStepMinutes) { stepMinutes = newStepMinutes; }
+
+    QDateTime getCurrentTime() {return currentTime;}
 
 private:
     void updateCalendar();

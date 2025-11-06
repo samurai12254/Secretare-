@@ -1,7 +1,7 @@
 #include "simulatorwindow.h"
 
-SimulatorWindow::SimulatorWindow(QWidget *parent)
-    : QWidget(parent)
+SimulatorWindow::SimulatorWindow(Simulator* init_simulator,QWidget *parent)
+    : QWidget(parent), now_simulator(init_simulator)
 {
     setupUI();
 }
@@ -68,7 +68,7 @@ void SimulatorWindow::setupUI()
     QLabel *infoLabel = new QLabel("Моделирование будет выполнено для выбранного периода с указанным шагом.\n"
                                   "При включенных опциях будут генерироваться напоминания и разрешаться конфликты.");
     infoLabel->setWordWrap(true);
-    infoLabel->setStyleSheet("background-color: #E3F2FD; padding: 10px; border-radius: 5px;");
+    infoLabel->setStyleSheet("background-color: #EE204D; padding: 10px; border-radius: 5px;");
     mainLayout->addWidget(infoLabel);
 
     mainLayout->addStretch();
@@ -102,6 +102,14 @@ void SimulatorWindow::handleStartSimulation()
 
     if (reply == QMessageBox::Yes) {
         QMessageBox::information(this, "Успех", "Моделирование запущено с выбранными параметрами!");
+        int currentPeriod = periodSpinBox->value();
+        QString currentStep = stepComboBox->currentText();
+        if (currentStep == "30 минут") {
+            now_simulator->setStepMinutes(30);
+        } else if (currentStep == "1 час") {
+            now_simulator->setStepMinutes(60);
+        }
+        now_simulator->setEndTime(now_simulator->getCurrentTime().addDays(currentPeriod));
         emit simulationStarted();
     }
 }

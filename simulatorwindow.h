@@ -12,12 +12,14 @@
 #include <QGroupBox>
 #include <QMessageBox>
 
+#include "simulator.h"
+
 class SimulatorWindow : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit SimulatorWindow(QWidget *parent = nullptr);
+    explicit SimulatorWindow(Simulator* init_simulator, QWidget *parent = nullptr);
 
     // Геттеры для получения параметров
     int getSimulationPeriod() const;
@@ -41,6 +43,8 @@ private:
     QCheckBox *remindersCheckBox;
     QCheckBox *conflictResolutionCheckBox;
     QPushButton *startButton;
+
+    Simulator* now_simulator;
 };
 
 #endif // SIMULATIONSETTINGSWINDOW_H

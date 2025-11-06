@@ -1,7 +1,7 @@
 #include "mailwindow.h"
 
-MailWindow::MailWindow(QWidget *parent)
-    : QWidget(parent)
+MailWindow::MailWindow(MailSystem* MSystem_, QWidget *parent)
+    : QWidget(parent), MSystem(MSystem_)
 {
     setupLoginUI();
     setupMailUI();
@@ -18,7 +18,6 @@ MailWindow::MailWindow(QWidget *parent)
     Users["user2"] = b;
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(stack);
-    MSystem = new MailSystem();
     // Подключаем сигналы
     connect(loginButton, &QPushButton::clicked, this, &MailWindow::handleLogin);
     connect(sendButton, &QPushButton::clicked, this, &MailWindow::handleSendMessage);

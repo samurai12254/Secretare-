@@ -10,6 +10,8 @@
 #include "mailwindow.h"
 #include "calendarwindow.h"
 
+#include "simulator.h"
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT

@@ -17,9 +17,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Стек для переключения страниц
     stack = new QStackedWidget();
+    MailSystem* MSystem = new MailSystem();
+    Simulator* now_simulator = new Simulator(nullptr, MSystem, QDateTime::currentDateTime(), QDateTime::currentDateTime(), 0);
 
-    simulatorPage = new SimulatorWindow();
-    mailPage = new MailWindow();
+    simulatorPage = new SimulatorWindow(now_simulator);
+    mailPage = new MailWindow(MSystem);
     calendarPage = new CalendarWindow();
 
     // Добавляем страницы в стек

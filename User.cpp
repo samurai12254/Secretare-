@@ -1,9 +1,9 @@
 #include "User.hpp"
 
 // Конструктор
-User::User(QString id, const QString& login_, const QString& password_, 
-           const QString& role_, const QString& department_)
-    : user_id(id), login(login_), password(password_), role(role), department(department_) {}
+User::User(QString id, const QString login_, const QString password_, 
+           const QString role_, const QString department_)
+    : user_id(id), login(login_), password(password_), role(role_), department(department_) {}
 
 // Проверка пароля
 bool User::CheckPassword(const QString& input_password) const {

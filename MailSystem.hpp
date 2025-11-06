@@ -19,9 +19,9 @@ public:
     
     // Основные методы
     void sendMessage(User* user, const QString& subject, 
-                    const QString& text, const QDateTime& date = QDateTime::currentDateTime());
+                    const QString& text, const QString& sender="System", const QDateTime& date = QDateTime::currentDateTime());
     void sendMessageToMultiple(const QVector<User*>& users, const QString& subject, 
-                              const QString& text, const QDateTime& date = QDateTime::currentDateTime());
+                              const QString& text, const QString& sender="System", const QDateTime& date = QDateTime::currentDateTime());
     
     void sendReminder(User* user, Event* event);
 

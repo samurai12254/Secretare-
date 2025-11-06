@@ -18,8 +18,8 @@ private:
 
 public:
     // Конструктор
-    User(QString id, const QString& l, const QString& p, 
-         const QString& r, const QString& d);
+    User(QString id, const QString l, const QString p, 
+         const QString r, const QString d);
 
     // Проверка пароля
     bool CheckPassword(const QString& input_password) const;

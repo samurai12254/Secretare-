@@ -4,11 +4,11 @@
 
 // Отправка сообщения пользователю
 void MailSystem::sendMessage(User* user, const QString& subject, 
-                            const QString& text, const QDateTime& date) {
+                            const QString& text, const QString& sender, const QDateTime& date) {
     if (!user) return;
     
     QString userLogin = user->GetLogin();
-    Message message("System", userLogin, subject, text, date);
+    Message message(sender, userLogin, subject, text, date);
     
     // Добавляем в inbox пользователя
     inbox[userLogin].append(message);
@@ -21,10 +21,10 @@ void MailSystem::sendMessage(User* user, const QString& subject,
 
 // Отправка сообщения нескольким пользователям
 void MailSystem::sendMessageToMultiple(const QVector<User*>& users, const QString& subject, 
-                                      const QString& text, const QDateTime& date) {
+                                      const QString& text, const QString& sender, const QDateTime& date) {
     for (User* user : users) {
         if (user) {
-            sendMessage(user, subject, text, date);
+            sendMessage(user, subject, text, sender, date);
         }
     }
 }

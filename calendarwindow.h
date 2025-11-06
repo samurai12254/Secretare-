@@ -1,10 +1,9 @@
-#ifndef CALENDARWINDOW_H
-#define CALENDARWINDOW_H
+#pragma once
+#include <QWidget>
 
-class CalendarWindow
+class CalendarWindow : public QWidget
 {
+    Q_OBJECT
 public:
-    CalendarWindow();
+    explicit CalendarWindow(QWidget *parent = nullptr);
 };
-
-#endif // CALENDARWINDOW_H

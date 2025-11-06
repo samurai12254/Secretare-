@@ -1,10 +1,9 @@
-#ifndef MAILWINDOW_H
-#define MAILWINDOW_H
+#pragma once
+#include <QWidget>
 
-class MailWindow
+class MailWindow : public QWidget
 {
+    Q_OBJECT
 public:
-    MailWindow();
+    explicit MailWindow(QWidget *parent = nullptr);
 };
-
-#endif // MAILWINDOW_H

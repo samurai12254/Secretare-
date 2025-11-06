@@ -1,6 +1,4 @@
-#ifndef SIMULATORWINDOW_H
-#define SIMULATORWINDOW_H
-
+#pragma once
 #include <QWidget>
 
 class SimulatorWindow : public QWidget
@@ -9,5 +7,3 @@ class SimulatorWindow : public QWidget
 public:
     explicit SimulatorWindow(QWidget *parent = nullptr);
 };
-
-#endif // SIMULATORWINDOW_H

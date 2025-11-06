@@ -1,18 +1,57 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
-#include <QWidgetAction>
-#include <QLineEdit>
-#include <QVBoxLayout>
-#include <QToolButton>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+    QWidget *central = new QWidget(this);
+    QVBoxLayout *layout = new QVBoxLayout(central);
+
+    // Кнопки навигации
+    simButton = new QPushButton("Simulator");
+    mailButton = new QPushButton("Mail");
+    calendarButton = new QPushButton("Calendar");
+
+    layout->addWidget(simButton);
+    layout->addWidget(mailButton);
+    layout->addWidget(calendarButton);
+
+    // Стек для переключения страниц
+    stack = new QStackedWidget();
+
+    simulatorPage = new SimulatorWindow();
+    mailPage = new MailWindow();
+    calendarPage = new CalendarWindow();
+
+    // Добавляем страницы в стек
+    stack->addWidget(simulatorPage);
+    stack->addWidget(mailPage);
+    stack->addWidget(calendarPage);
+
+    layout->addWidget(stack);
+    setCentralWidget(central);
+
+    // Подключаем сигналы
+    connect(simButton, &QPushButton::clicked, this, &MainWindow::showSimulator);
+    connect(mailButton, &QPushButton::clicked, this, &MainWindow::showMail);
+    connect(calendarButton, &QPushButton::clicked, this, &MainWindow::showCalendar);
+
+    // По умолчанию показываем первую страницу
+    stack->setCurrentWidget(simulatorPage);
 }
 
-MainWindow::~MainWindow()
+MainWindow::~MainWindow() {}
+
+void MainWindow::showSimulator()
 {
-    delete ui;
+    stack->setCurrentWidget(simulatorPage);
+}
+
+void MainWindow::showMail()
+{
+    stack->setCurrentWidget(mailPage);
+}
+
+void MainWindow::showCalendar()
+{
+    stack->setCurrentWidget(calendarPage);
 }

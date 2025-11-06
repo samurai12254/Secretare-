@@ -1,14 +1,14 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
-#include <QMenu>
-#include <QEvent>
-#include <QToolButton>
+#include <QPushButton>
+#include <QStackedWidget>
+#include <QVBoxLayout>
+#include <QWidget>
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+#include "simulatorwindow.h"
+#include "mailwindow.h"
+#include "calendarwindow.h"
 
 class MainWindow : public QMainWindow
 {
@@ -17,7 +17,19 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+private slots:
+    void showSimulator();
+    void showMail();
+    void showCalendar();
+
 private:
-    Ui::MainWindow *ui;
+    QPushButton *simButton;
+    QPushButton *mailButton;
+    QPushButton *calendarButton;
+
+    QStackedWidget *stack; // 👈 хранит все "экраны"
+    SimulatorWindow *simulatorPage;
+    MailWindow *mailPage;
+    CalendarWindow *calendarPage;
 };
-#endif // MAINWINDOW_H

@@ -29,8 +29,16 @@ private:
 public:
     // --- Конструкторы ---
     Event();
-    Event(QString id,
-          QString title,
+    Event(QString title,
+          Department* location,
+          QDateTime startTime,
+          QDateTime endTime,
+          QString& participantsString,   // "ivan, petr, anna"
+          QVector<User*>& allUsers,      // список всех пользователей системы
+          QString importance,
+          QString description = "",
+          bool isInternal = true);
+    Event(QString title,
           Department* location,
           QDateTime startTime,
           QDateTime endTime,
@@ -38,7 +46,7 @@ public:
           QString importance,
           QString description = "",
           bool isInternal = true);
-
+    Event(bool z);
     // --- Геттеры ---
     QString getId() const;
     QString getTitle() const;
@@ -63,6 +71,7 @@ public:
     // --- Управление участниками ---
     bool addParticipant(User* user);
     bool removeParticipant(User* user);
+    void setParticipantsFromString(const QString& participantsString, const QVector<User*>& allUsers);
 
     // --- Проверка конфликтов ---
     bool conflictsWith(const Event& other) const;

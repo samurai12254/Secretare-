@@ -1,9 +1,38 @@
 #include "event.h"
-
+#include <random>
+#include <chrono>
+#include <string>
+using dist = std::uniform_int_distribution<int>;
+std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 // --- Конструкторы ---
 Event::Event() = default;
+Event::Event(QString title,
+             Department* location,
+             QDateTime startTime,
+             QDateTime endTime,
+             QString& participantsString,
+             QVector<User*>& allUsers,
+             QString importance,
+             QString description,
+             bool isInternal)
+    :
+    title(title),
+    location(location),
+    startTime(startTime),
+    endTime(endTime),
+    importance(importance),
+    description(description),
+    isInternal(isInternal)
+{
+    std::string id_now;
+    for(int i = 0;i < 20;i++){
+        id_now += (char)dist(35,94)(rng);
+    }
+    id = QString::fromStdString(id_now);
+    setParticipantsFromString(participantsString, allUsers);
+}
 
-Event::Event(QString id,
+Event::Event(
              QString title,
              Department* location,
              QDateTime startTime,
@@ -12,8 +41,7 @@ Event::Event(QString id,
              QString importance,
              QString description,
              bool isInternal)
-    : id(id),
-      title(title),
+    : title(title),
       location(location),
       startTime(startTime),
       endTime(endTime),
@@ -21,7 +49,13 @@ Event::Event(QString id,
       importance(importance),
       description(description),
       isInternal(isInternal)
-{}
+{
+    std::string id_now;
+    for(int i = 0;i < 20;i++){
+        id_now += (char)dist(35,94)(rng);
+    }
+    id = QString::fromStdString(id_now);
+}
 
 // --- Геттеры ---
 QString Event::getId() const { return id; }
@@ -112,4 +146,18 @@ QString Event::summary() const {
         .arg(formattedEnd())
         .arg(locName);
 }
-    
+
+void Event::setParticipantsFromString(const QString& participantsString, const QVector<User*>& allUsers)
+{
+    QStringList logins = participantsString.split(',', Qt::SkipEmptyParts);
+    for (QString login : logins) {
+        login = login.trimmed(); // убираем пробелы
+
+        for (User* user : allUsers) {
+            if (user && user->GetLogin() == login) {
+                addParticipant(user);
+                break;
+            }
+        }
+    }
+}

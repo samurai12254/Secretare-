@@ -1,7 +1,7 @@
 #include "simulatorwindow.h"
 
-SimulatorWindow::SimulatorWindow(Simulator* init_simulator,QWidget *parent)
-    : QWidget(parent), now_simulator(init_simulator)
+SimulatorWindow::SimulatorWindow(QHash<QString, User*>* init_users_hash,QList<User*>* user_list_p,Simulator* init_simulator, QWidget *parent)
+    : QWidget(parent), now_simulator(init_simulator), usersList(user_list_p), users_hash_table(init_users_hash)
 {
     setupUI();
 }
@@ -59,6 +59,9 @@ void SimulatorWindow::setupUI()
 
     mainLayout->addWidget(additionalParamsGroup);
 
+    // Секция управления пользователями
+    setupUsersSection();
+
     // Кнопка запуска
     startButton = new QPushButton("Запустить моделирование");
     startButton->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; font-weight: bold; padding: 8px; }");
@@ -78,8 +81,82 @@ void SimulatorWindow::setupUI()
     connect(periodSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SimulatorWindow::validateInput);
 }
 
+void SimulatorWindow::setupUsersSection()
+{
+    QGroupBox *usersGroup = new QGroupBox("Управление пользователями");
+    QVBoxLayout *usersLayout = new QVBoxLayout(usersGroup);
+
+    // Форма добавления пользователя
+    QGridLayout *formLayout = new QGridLayout();
+    
+    formLayout->addWidget(new QLabel("ID:"), 0, 0);
+    userIdInput = new QLineEdit();
+    formLayout->addWidget(userIdInput, 0, 1);
+    
+    formLayout->addWidget(new QLabel("Логин:"), 0, 2);
+    userLoginInput = new QLineEdit();
+    formLayout->addWidget(userLoginInput, 0, 3);
+    
+    formLayout->addWidget(new QLabel("Пароль:"), 1, 0);
+    userPasswordInput = new QLineEdit();
+    userPasswordInput->setEchoMode(QLineEdit::Password);
+    formLayout->addWidget(userPasswordInput, 1, 1);
+    
+    formLayout->addWidget(new QLabel("Роль:"), 1, 2);
+    userRoleComboBox = new QComboBox();
+    userRoleComboBox->addItems({"сотрудник", "секретарь", "руководитель"});
+    formLayout->addWidget(userRoleComboBox, 1, 3);
+    
+    formLayout->addWidget(new QLabel("Отдел:"), 2, 0);
+    userDepartmentInput = new QLineEdit();
+    formLayout->addWidget(userDepartmentInput, 2, 1);
+    
+    usersLayout->addLayout(formLayout);
+
+    // Кнопки управления пользователями
+    QHBoxLayout *buttonsLayout = new QHBoxLayout();
+    addUserButton = new QPushButton("Добавить пользователя");
+    removeUserButton = new QPushButton("Удалить выбранного");
+    removeUserButton->setEnabled(false);
+    
+    buttonsLayout->addWidget(addUserButton);
+    buttonsLayout->addWidget(removeUserButton);
+    buttonsLayout->addStretch();
+    
+    usersLayout->addLayout(buttonsLayout);
+
+    // Таблица пользователей
+    usersTable = new QTableWidget();
+    usersTable->setColumnCount(5);
+    usersTable->setHorizontalHeaderLabels({"ID", "Логин", "Пароль", "Роль", "Отдел"});
+    usersTable->horizontalHeader()->setStretchLastSection(true);
+    usersTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    usersTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    usersTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    
+    usersLayout->addWidget(usersTable);
+
+    // Подключаем сигналы
+    connect(addUserButton, &QPushButton::clicked, this, &SimulatorWindow::handleAddUser);
+    connect(removeUserButton, &QPushButton::clicked, this, &SimulatorWindow::handleRemoveUser);
+    connect(usersTable, &QTableWidget::itemSelectionChanged, this, &SimulatorWindow::handleUserSelection);
+
+    // Добавляем группу в основной layout
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(this->layout());
+    if (mainLayout) {
+        // Вставляем перед кнопкой запуска
+        mainLayout->insertWidget(2, usersGroup);
+    }
+}
+
 void SimulatorWindow::handleStartSimulation()
 {
+    // Проверяем, что есть хотя бы один пользователь
+    if (usersList->isEmpty()) {
+        QMessageBox::warning(this, "Ошибка", "Добавьте хотя бы одного пользователя перед запуском моделирования");
+        return;
+    }
+
     // Проверяем валидность введенных данных
     if (periodSpinBox->value() < 7 || periodSpinBox->value() > 30) {
         QMessageBox::warning(this, "Ошибка", "Период моделирования должен быть от 7 до 30 дней");
@@ -93,15 +170,17 @@ void SimulatorWindow::handleStartSimulation()
                                        "Период: %1 дней\n"
                                        "Шаг: %2\n"
                                        "Напоминания: %3\n"
-                                       "Разрешение конфликтов: %4")
+                                       "Разрешение конфликтов: %4\n"
+                                       "Пользователей: %5")
                                 .arg(periodSpinBox->value())
                                 .arg(stepComboBox->currentText())
                                 .arg(remindersCheckBox->isChecked() ? "Включены" : "Отключены")
-                                .arg(conflictResolutionCheckBox->isChecked() ? "Включено" : "Отключено"),
+                                .arg(conflictResolutionCheckBox->isChecked() ? "Включено" : "Отключено")
+                                .arg(usersList->size()),
                                 QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
-        QMessageBox::information(this, "Успех", "Моделирование запущено с выбранными параметрами!");
+        // Сохраняем настройки в симулятор
         int currentPeriod = periodSpinBox->value();
         QString currentStep = stepComboBox->currentText();
         if (currentStep == "30 минут") {
@@ -110,6 +189,15 @@ void SimulatorWindow::handleStartSimulation()
             now_simulator->setStepMinutes(60);
         }
         now_simulator->setEndTime(now_simulator->getCurrentTime().addDays(currentPeriod));
+        
+        QMessageBox::information(this, "Успех", 
+                                QString("Моделирование запущено с параметрами:\n"
+                                       "Период: %1 дней\n"
+                                       "Шаг: %2\n"
+                                       "Пользователей: %3")
+                                .arg(currentPeriod)
+                                .arg(currentStep)
+                                .arg(usersList->size()));
         emit simulationStarted();
     }
 }
@@ -123,6 +211,110 @@ void SimulatorWindow::validateInput()
     } else if (value > 30) {
         periodSpinBox->setValue(30);
     }
+}
+
+void SimulatorWindow::handleAddUser()
+{
+    if (!validateUserInput()) {
+        return;
+    }
+
+    // Создаем нового пользователя
+    User* new_user_p = new User(
+        userIdInput->text().trimmed(),
+        userLoginInput->text().trimmed(),
+        userPasswordInput->text().trimmed(),
+        userRoleComboBox->currentText(),
+        userDepartmentInput->text().trimmed()
+    );
+
+    // Проверяем уникальность ID
+    for (const User* user : *(usersList)) {
+        if (user->GetId() == new_user_p->GetId()) {
+            QMessageBox::warning(this, "Ошибка", "Пользователь с таким ID уже существует");
+            return;
+        }
+    }
+    
+    // Добавляем пользователя в список
+    usersList->append(new_user_p);
+    updateUsersTable();
+    users_hash_table->insert(new_user_p->GetLogin(), new_user_p);
+
+
+    // Очищаем поля ввода
+    userIdInput->clear();
+    userLoginInput->clear();
+    userPasswordInput->clear();
+    userDepartmentInput->clear();
+    
+    QMessageBox::information(this, "Успех", "Пользователь успешно добавлен");
+}
+
+void SimulatorWindow::handleRemoveUser()
+{
+    int currentRow = usersTable->currentRow();
+    if (currentRow >= 0 && currentRow < usersList->size()) {
+        QString userId = (*usersList)[currentRow]->GetId();
+        QString user_login = (*usersList)[currentRow]->GetLogin();
+        usersList->removeAt(currentRow);
+        users_hash_table->erase(users_hash_table->find(user_login));
+        updateUsersTable();
+        QMessageBox::information(this, "Успех", QString("Пользователь %1 удален").arg(userId));
+    }
+}
+
+void SimulatorWindow::handleUserSelection()
+{
+    removeUserButton->setEnabled(usersTable->currentRow() >= 0);
+}
+
+bool SimulatorWindow::validateUserInput()
+{
+    if (userIdInput->text().trimmed().isEmpty()) {
+        QMessageBox::warning(this, "Ошибка", "Введите ID пользователя");
+        return false;
+    }
+    if (userLoginInput->text().trimmed().isEmpty()) {
+        QMessageBox::warning(this, "Ошибка", "Введите логин пользователя");
+        return false;
+    }
+    if (userPasswordInput->text().trimmed().isEmpty()) {
+        QMessageBox::warning(this, "Ошибка", "Введите пароль пользователя");
+        return false;
+    }
+    if (userDepartmentInput->text().trimmed().isEmpty()) {
+        QMessageBox::warning(this, "Ошибка", "Введите отдел пользователя");
+        return false;
+    }
+    return true;
+}
+
+void SimulatorWindow::updateUsersTable()
+{
+    usersTable->setRowCount(usersList->size());
+    
+    for (int i = 0; i < usersList->size(); ++i) {
+        const User& user = *((*usersList)[i]);
+        usersTable->setItem(i, 0, new QTableWidgetItem(user.GetId()));
+        usersTable->setItem(i, 1, new QTableWidgetItem(user.GetLogin()));
+        usersTable->setItem(i, 2, new QTableWidgetItem("******")); // Скрываем пароль
+        usersTable->setItem(i, 3, new QTableWidgetItem(user.GetRole()));
+        usersTable->setItem(i, 4, new QTableWidgetItem(user.GetDepartment()));
+    }
+    
+    usersTable->resizeColumnsToContents();
+}
+
+void SimulatorWindow::addUser(User* user)
+{
+    usersList->append(user);
+    updateUsersTable();
+}
+
+QList<User*> SimulatorWindow::getUsers() const
+{
+    return *usersList;
 }
 
 // Геттеры для получения параметров

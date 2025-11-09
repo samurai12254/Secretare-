@@ -22,7 +22,7 @@ class MailWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit MailWindow(MailSystem* MSystem_, QWidget *parent = nullptr);
+    explicit MailWindow(QHash<QString, User*>*&, MailSystem* MSystem_, QWidget *parent = nullptr);
 
 private slots:
     void handleLogin();

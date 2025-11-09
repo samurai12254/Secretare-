@@ -1,6 +1,6 @@
 #include "mailwindow.h"
 
-MailWindow::MailWindow(MailSystem* MSystem_, QWidget *parent)
+MailWindow::MailWindow(QHash<QString, User*>*& users_pointer,MailSystem* MSystem_, QWidget *parent)
     : QWidget(parent), MSystem(MSystem_)
 {
     setupLoginUI();
@@ -12,10 +12,7 @@ MailWindow::MailWindow(MailSystem* MSystem_, QWidget *parent)
     stack->addWidget(mailPage);
     
 
-    User* a = new User("1", "user1", "", "", "");
-    User* b = new User("2", "user2", "", "", "");
-    Users["user1"] = a;
-    Users["user2"] = b;
+    users_pointer = &Users;
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(stack);
     // Подключаем сигналы

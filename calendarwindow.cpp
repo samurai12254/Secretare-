@@ -38,7 +38,6 @@ QVector<Event> CalendarWindow::getAllStartEvents(const QDate& start, const QDate
 CalendarWindow::CalendarWindow(QVector<User*> *users, QWidget *parent)
     : QWidget(parent), allUsers(users)
 {
-    runAuthorization();
 }
 
 void CalendarWindow::highlightDates()

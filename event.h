@@ -69,6 +69,7 @@ public:
     void setIsInternal(bool newValue);
 
     // --- Управление участниками ---
+    void clearParticipants();
     bool addParticipant(User* user);
     bool removeParticipant(User* user);
     void setParticipantsFromString(const QString& participantsString, const QVector<User*>& allUsers);

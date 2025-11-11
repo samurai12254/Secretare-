@@ -67,6 +67,9 @@ QVector<User*> Event::getParticipants() const { return participants; }
 QString Event::getImportance() const { return importance; }
 QString Event::getDescription() const { return description; }
 bool Event::getIsInternal() const { return isInternal; }
+void Event::clearParticipants(){
+    participants.clear();
+}
 
 // --- Сеттеры ---
 void Event::setTitle(const QString& newTitle) { title = newTitle; }
@@ -147,7 +150,7 @@ QString Event::summary() const {
         .arg(locName);
 }
 
-void Event::setParticipantsFromString(const QString& participantsString, const QVector<User*>& allUsers)
+void Event::setParticipantsFromString(const QString& participantsString, const QVector<User*> &allUsers)
 {
     QStringList logins = participantsString.split(',', Qt::SkipEmptyParts);
     for (QString login : logins) {

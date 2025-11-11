@@ -11,6 +11,8 @@ class CalendarWindow : public QWidget
 public:
     explicit CalendarWindow(QWidget *parent = nullptr);
     explicit CalendarWindow(QVector<User*> *users, QWidget *parent = nullptr);
+    QVector<Event> getAllStartEvents(const QDate& start, const QDate& finish) const;
+    QVector<Event> getALLEvents();
 
 private slots:
     void onDateClicked(const QDate &date);
@@ -19,6 +21,6 @@ private slots:
 private:
     QCalendarWidget *calendar;
     QVector<Event> events; // храним все события как Event
-    QVector<User*> allUsers;
+    QVector<User*> *allUsers = nullptr;
     void highlightDates();
 };

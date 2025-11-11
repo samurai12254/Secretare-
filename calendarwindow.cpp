@@ -16,7 +16,10 @@ CalendarWindow::CalendarWindow(QWidget *parent)
 {
     setWindowTitle("Calendar");
     QVBoxLayout *layout = new QVBoxLayout(this);
-
+    allUsers = new QVector <User*>;
+    QString as = "as";
+    User* uk = new User(as,as,as,as,as);
+    allUsers->push_back(uk);
     QLabel *label = new QLabel("Select a date:", this);
     calendar = new QCalendarWidget(this);
 
@@ -26,6 +29,41 @@ CalendarWindow::CalendarWindow(QWidget *parent)
     // пример: тестовое событие
     QDateTime now = QDateTime::currentDateTime();
     //events.append(Event("1", "Meeting", nullptr, now, now.addSecs(3600), {}, "Средняя", "Обсудить проект"));
+
+    highlightDates();
+
+    connect(calendar, &QCalendarWidget::clicked, this, &CalendarWindow::onDateClicked);
+}
+QVector<Event> CalendarWindow::getALLEvents(){
+    return events;
+}
+QVector<Event> CalendarWindow::getAllStartEvents(const QDate& start, const QDate& finish) const
+{
+    QVector<Event> result;
+    // Для удобства создаём отсортированные диапазоны дат
+    QDate startDate = start <= finish ? start : finish;
+    QDate endDate   = start <= finish ? finish : start;
+    for (Event ev : events) {
+        QDate eventStartDate = ev.getStartTime().date();
+
+        // Проверяем: дата начала события попадает в диапазон [startDate; endDate]
+        if (eventStartDate >= startDate && eventStartDate <= endDate) {
+            result.push_back(ev);
+        }
+    }
+    return result;
+}
+CalendarWindow::CalendarWindow(QVector<User*> *users, QWidget *parent)
+    : QWidget(parent), allUsers(users)
+{
+    setWindowTitle("Calendar");
+    QVBoxLayout *layout = new QVBoxLayout(this);
+
+    QLabel *label = new QLabel("Select a date:", this);
+    calendar = new QCalendarWidget(this);
+
+    layout->addWidget(label);
+    layout->addWidget(calendar);
 
     highlightDates();
 
@@ -106,6 +144,27 @@ void CalendarWindow::onDateClicked(const QDate &date)
                 editLayout->addWidget(timeLabel);
                 editLayout->addWidget(timeEdit);
 
+                // --- Participants ---
+                QLabel *participantsLabel = new QLabel("Participants (comma separated):", &editDialog);
+                QLineEdit *participantsEdit = new QLineEdit(&editDialog);
+
+                // заполняем строку логинов обратно
+                QStringList logins;
+                for (User* u : ev.getParticipants()) {
+                    if (u) logins.append(u->GetLogin());
+                }
+                participantsEdit->setText(logins.join(", "));
+
+                editLayout->addWidget(participantsLabel);
+                editLayout->addWidget(participantsEdit);
+
+                // --- Duration ---
+                int oldDuration = ev.getStartTime().secsTo(ev.getEndTime()) / 60;
+                QLabel *durLabel = new QLabel("Duration (minutes):", &editDialog);
+                QLineEdit *durEdit = new QLineEdit(QString::number(oldDuration), &editDialog);
+                editLayout->addWidget(durLabel);
+                editLayout->addWidget(durEdit);
+
                 QHBoxLayout *buttons = new QHBoxLayout();
                 QPushButton *okBtn = new QPushButton("Save", &editDialog);
                 QPushButton *cancelBtn = new QPushButton("Cancel", &editDialog);
@@ -124,9 +183,22 @@ void CalendarWindow::onDateClicked(const QDate &date)
                         {
                             editable.setTitle(titleEdit->text());
                             editable.setDescription(descEdit->text());
+
+                            // новое время начала
                             QDateTime newStart(date, timeEdit->time());
                             editable.setStartTime(newStart);
-                            editable.setEndTime(newStart.addSecs(3600));
+
+                            // читаем duration
+                            bool okDur;
+                            int newDuration = durEdit->text().toInt(&okDur);
+                            if (!okDur || newDuration <= 0) newDuration = 60;
+
+                            // новое время окончания
+                            editable.setEndTime(newStart.addSecs(newDuration * 60));
+
+                            // --- пересоздаём участников ---
+                            editable.clearParticipants();
+                            editable.setParticipantsFromString(participantsEdit->text(), *allUsers);
                             break;
                         }
                     }
@@ -233,7 +305,6 @@ void CalendarWindow::addEvent(const QDate &date)
             QMessageBox::warning(this, "Error", "Title cannot be empty!");
             return;
         }
-
         // --- Создаём событие ---
         bool ok;
         int durationMinutes = durationEdit->text().toInt(&ok);
@@ -249,7 +320,7 @@ void CalendarWindow::addEvent(const QDate &date)
             start,
             end,
             participantsStr,        // строка логинов
-            allUsers,               // список всех пользователей
+            *allUsers,               // список всех пользователей
             "Средняя",
             desc
             );

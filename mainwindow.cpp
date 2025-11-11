@@ -19,11 +19,11 @@ MainWindow::MainWindow(QWidget *parent)
     stack = new QStackedWidget();
     MailSystem* MSystem = new MailSystem();
     Simulator* now_simulator = new Simulator(nullptr, MSystem, QDateTime::currentDateTime(), QDateTime::currentDateTime(), 0);
-    QList<User*>* Users = new QList<User*>;
+    QVector<User*>* Users = new QVector<User*>;
     QHash<QString, User*>* Users_hash_table = nullptr;
     mailPage = new MailWindow(Users_hash_table,MSystem);
     simulatorPage = new SimulatorWindow(Users_hash_table,Users,now_simulator);
-    calendarPage = new CalendarWindow();
+    calendarPage = new CalendarWindow(Users);
 
     // Добавляем страницы в стек
     stack->addWidget(simulatorPage);

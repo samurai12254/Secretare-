@@ -24,7 +24,7 @@ class SimulatorWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit SimulatorWindow(QHash<QString, User*>* init_users_hash,QList<User*>* user_list_p,Simulator* init_simulator, QWidget *parent = nullptr);
+    explicit SimulatorWindow(QHash<QString, User*>* init_users_hash, QList<User*>* user_list_p, Simulator* init_simulator, QWidget *parent = nullptr);
 
     // Геттеры для получения параметров
     int getSimulationPeriod() const;
@@ -45,6 +45,7 @@ private slots:
     void handleAddUser();
     void handleRemoveUser();
     void handleUserSelection();
+    void toggleUsersManagement(); // Новый слот для переключения видимости
 
 private:
     void setupUI();
@@ -58,8 +59,10 @@ private:
     QCheckBox *remindersCheckBox;
     QCheckBox *conflictResolutionCheckBox;
     QPushButton *startButton;
+    QPushButton *manageUsersButton; // Новая кнопка для управления пользователями
 
     // Элементы для управления пользователями
+    QGroupBox *usersGroup; // Группа управления пользователями
     QLineEdit *userIdInput;
     QLineEdit *userLoginInput;
     QLineEdit *userPasswordInput;
@@ -72,6 +75,7 @@ private:
     Simulator* now_simulator;
     QList<User*>* usersList;
     QHash<QString, User*>* users_hash_table;
+    bool usersSectionVisible; // Флаг видимости секции пользователей
 };
 
 #endif // SIMULATORWINDOW_H

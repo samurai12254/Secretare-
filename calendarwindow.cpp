@@ -14,25 +14,7 @@
 CalendarWindow::CalendarWindow(QWidget *parent)
     : QWidget(parent)
 {
-    setWindowTitle("Calendar");
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    allUsers = new QVector <User*>;
-    QString as = "as";
-    User* uk = new User(as,as,as,as,as);
-    allUsers->push_back(uk);
-    QLabel *label = new QLabel("Select a date:", this);
-    calendar = new QCalendarWidget(this);
 
-    layout->addWidget(label);
-    layout->addWidget(calendar);
-
-    // пример: тестовое событие
-    QDateTime now = QDateTime::currentDateTime();
-    //events.append(Event("1", "Meeting", nullptr, now, now.addSecs(3600), {}, "Средняя", "Обсудить проект"));
-
-    highlightDates();
-
-    connect(calendar, &QCalendarWidget::clicked, this, &CalendarWindow::onDateClicked);
 }
 QVector<Event> CalendarWindow::getALLEvents(){
     return events;
@@ -56,18 +38,7 @@ QVector<Event> CalendarWindow::getAllStartEvents(const QDate& start, const QDate
 CalendarWindow::CalendarWindow(QVector<User*> *users, QWidget *parent)
     : QWidget(parent), allUsers(users)
 {
-    setWindowTitle("Calendar");
-    QVBoxLayout *layout = new QVBoxLayout(this);
-
-    QLabel *label = new QLabel("Select a date:", this);
-    calendar = new QCalendarWidget(this);
-
-    layout->addWidget(label);
-    layout->addWidget(calendar);
-
-    highlightDates();
-
-    connect(calendar, &QCalendarWidget::clicked, this, &CalendarWindow::onDateClicked);
+    runAuthorization();
 }
 
 void CalendarWindow::highlightDates()
@@ -84,6 +55,46 @@ void CalendarWindow::highlightDates()
         calendar->setDateTextFormat(d, fmt);
     }
 }
+bool CalendarWindow::runAuthorization()
+{
+    QString login = QInputDialog::getText(this, "Авторизация", "Логин:");
+    if (login.isEmpty()) return false;
+
+    QString pass = QInputDialog::getText(this, "Авторизация", "Пароль:", QLineEdit::Password);
+    if (pass.isEmpty()) return false;
+
+    for (User* u : *allUsers)
+    {
+        if (u->GetLogin() == login && u->CheckPassword(pass))
+        {
+            currentUser = u;
+            // Если UI ещё не создан, создаём
+            if (!uiBuilt) buildCalendarUI();
+            return true;
+        }
+    }
+
+    QMessageBox::warning(this, "Ошибка", "Неверный логин или пароль!");
+    return false;
+}
+
+void CalendarWindow::buildCalendarUI()
+{
+    uiBuilt = true;
+    setWindowTitle("Calendar");
+    QVBoxLayout *layout = new QVBoxLayout(this);
+
+    QLabel *label = new QLabel("Select a date:", this);
+    calendar = new QCalendarWidget(this);
+
+    layout->addWidget(label);
+    layout->addWidget(calendar);
+
+    highlightDates();
+
+    connect(calendar, &QCalendarWidget::clicked, this, &CalendarWindow::onDateClicked);
+}
+
 
 void CalendarWindow::onDateClicked(const QDate &date)
 {
@@ -113,7 +124,13 @@ void CalendarWindow::onDateClicked(const QDate &date)
 
             QPushButton *editBtn = new QPushButton("Edit", eventWidget);
             QPushButton *deleteBtn = new QPushButton("Delete", eventWidget);
-
+            if (currentUser->GetRole() == "Сотрудник") {
+                editBtn->setVisible(false);
+                deleteBtn->setVisible(false);
+            }
+            else if (currentUser->GetRole() == "Секретарь") {
+                deleteBtn->setVisible(false);
+            }
             eventLayout->addWidget(info);
             eventLayout->addWidget(editBtn);
             eventLayout->addWidget(deleteBtn);

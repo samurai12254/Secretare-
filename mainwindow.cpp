@@ -23,7 +23,8 @@ MainWindow::MainWindow(QWidget *parent)
     QHash<QString, User*>* Users_hash_table = nullptr;
     mailPage = new MailWindow(Users_hash_table,MSystem);
     simulatorPage = new SimulatorWindow(Users_hash_table,Users,now_simulator);
-    calendarPage = new CalendarWindow(Users);
+
+    calendarPage = new CalendarWindow(Users,this);
 
     // Добавляем страницы в стек
     stack->addWidget(simulatorPage);
@@ -56,5 +57,13 @@ void MainWindow::showMail()
 
 void MainWindow::showCalendar()
 {
-    stack->setCurrentWidget(calendarPage);
+    if (calendarPage->runAuthorization())
+    {
+        stack->setCurrentWidget(calendarPage);
+    }
+    else
+    {
+        QMessageBox::information(this, "Доступ закрыт", "Вы не вошли в систему");
+    }
+    //stack->setCurrentWidget(calendarPage);
 }

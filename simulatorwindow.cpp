@@ -1,7 +1,7 @@
 #include "simulatorwindow.h"
 
-SimulatorWindow::SimulatorWindow(QHash<QString, User*>* init_users_hash,QList<User*>* user_list_p,Simulator* init_simulator, QWidget *parent)
-    : QWidget(parent), now_simulator(init_simulator), usersList(user_list_p), users_hash_table(init_users_hash)
+SimulatorWindow::SimulatorWindow(QHash<QString, User*>* init_users_hash, QList<User*>* user_list_p, Simulator* init_simulator, QWidget *parent)
+    : QWidget(parent), now_simulator(init_simulator), usersList(user_list_p), users_hash_table(init_users_hash), usersSectionVisible(false)
 {
     setupUI();
 }
@@ -59,8 +59,14 @@ void SimulatorWindow::setupUI()
 
     mainLayout->addWidget(additionalParamsGroup);
 
-    // Секция управления пользователями
+    // Кнопка управления пользователями
+    manageUsersButton = new QPushButton("Управление пользователями");
+    manageUsersButton->setStyleSheet("QPushButton { background-color: #2196F3; color: white; font-weight: bold; padding: 8px; }");
+    mainLayout->addWidget(manageUsersButton);
+
+    // Секция управления пользователями (изначально скрыта)
     setupUsersSection();
+    usersGroup->setVisible(false); // Скрываем группу пользователей
 
     // Кнопка запуска
     startButton = new QPushButton("Запустить моделирование");
@@ -79,11 +85,12 @@ void SimulatorWindow::setupUI()
     // Подключаем сигналы
     connect(startButton, &QPushButton::clicked, this, &SimulatorWindow::handleStartSimulation);
     connect(periodSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SimulatorWindow::validateInput);
+    connect(manageUsersButton, &QPushButton::clicked, this, &SimulatorWindow::toggleUsersManagement); // Новое соединение
 }
 
 void SimulatorWindow::setupUsersSection()
 {
-    QGroupBox *usersGroup = new QGroupBox("Управление пользователями");
+    usersGroup = new QGroupBox("Управление пользователями");
     QVBoxLayout *usersLayout = new QVBoxLayout(usersGroup);
 
     // Форма добавления пользователя
@@ -144,8 +151,23 @@ void SimulatorWindow::setupUsersSection()
     // Добавляем группу в основной layout
     QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(this->layout());
     if (mainLayout) {
-        // Вставляем перед кнопкой запуска
-        mainLayout->insertWidget(2, usersGroup);
+        // Вставляем после кнопки управления пользователями
+        mainLayout->insertWidget(3, usersGroup);
+    }
+}
+
+void SimulatorWindow::toggleUsersManagement()
+{
+    usersSectionVisible = !usersSectionVisible;
+    usersGroup->setVisible(usersSectionVisible);
+    
+    // Обновляем текст кнопки в зависимости от состояния
+    if (usersSectionVisible) {
+        manageUsersButton->setText("Скрыть управление пользователями");
+        // Обновляем таблицу при открытии
+        updateUsersTable();
+    } else {
+        manageUsersButton->setText("Управление пользователями");
     }
 }
 
@@ -240,7 +262,6 @@ void SimulatorWindow::handleAddUser()
     usersList->append(new_user_p);
     updateUsersTable();
     users_hash_table->insert(new_user_p->GetLogin(), new_user_p);
-
 
     // Очищаем поля ввода
     userIdInput->clear();

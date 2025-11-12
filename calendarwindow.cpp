@@ -96,7 +96,7 @@ bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent
                 this,
                 "Location Conflict",
                 QString("Место '%1' уже занято другим событием '%2' (%3 - %4)")
-                    .arg(newEvent.getLocation()->getName())
+                    .arg(newEvent.getLocation())
                     .arg(existing.getTitle())
                     .arg(existing.getStartTime().time().toString("HH:mm"))
                     .arg(existing.getEndTime().time().toString("HH:mm"))
@@ -260,9 +260,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
                 // --- Локация ---
                 QLabel *locationLabel = new QLabel("Location:", &editDialog);
                 QLineEdit *locationEdit = new QLineEdit(&editDialog);
-                if (ev.getLocation()) {
-                    locationEdit->setText(ev.getLocation()->getName());
-                }
+                locationEdit->setText(ev.getLocation());
                 editLayout->addWidget(locationLabel);
                 editLayout->addWidget(locationEdit);
 
@@ -292,13 +290,9 @@ void CalendarWindow::onDateClicked(const QDate &date)
                     QString importance = importanceBox->currentText();
                     QString locName = locationEdit->text().trimmed();
 
-                    Department *loc = nullptr;
-                    if (!locName.isEmpty()) {
-                        loc = new Department(1,locName);
-                    }
 
                     newEvent.setImportance(importance);
-                    newEvent.setLocation(loc);
+                    newEvent.setLocation(locName);
 
                     newEvent.clearParticipants();
                     newEvent.setParticipantsFromString(participantsEdit->text(), *allUsers);
@@ -445,14 +439,10 @@ void CalendarWindow::addEvent(const QDate &date)
         QString importance = importanceBox->currentText();
         QString locName = locationEdit->text().trimmed();
 
-        Department *loc = nullptr;
-        if (!locName.isEmpty()) {
-            loc = new Department(1,locName); // если Department можно создать вручную
-        }
 
         Event newEvent(
             title,
-            loc,
+            locName,
             start,
             end,
             participantsStr,

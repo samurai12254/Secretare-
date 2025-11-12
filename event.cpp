@@ -7,7 +7,7 @@ std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 // --- Конструкторы ---
 Event::Event() = default;
 Event::Event(QString title,
-             Department* location,
+             QString location,
              QDateTime startTime,
              QDateTime endTime,
              QString& participantsString,
@@ -34,7 +34,7 @@ Event::Event(QString title,
 
 Event::Event(
              QString title,
-             Department* location,
+             QString location,
              QDateTime startTime,
              QDateTime endTime,
              QVector<User*> participants,
@@ -60,7 +60,7 @@ Event::Event(
 // --- Геттеры ---
 QString Event::getId() const { return id; }
 QString Event::getTitle() const { return title; }
-Department* Event::getLocation() const { return location; }
+QString Event::getLocation() const { return location; }
 QDateTime Event::getStartTime() const { return startTime; }
 QDateTime Event::getEndTime() const { return endTime; }
 QVector<User*> Event::getParticipants() const { return participants; }
@@ -73,7 +73,7 @@ void Event::clearParticipants(){
 
 // --- Сеттеры ---
 void Event::setTitle(const QString& newTitle) { title = newTitle; }
-void Event::setLocation(Department* newLoc) { location = newLoc; }
+void Event::setLocation(QString newLoc) { location = newLoc; }
 void Event::setStartTime(const QDateTime& newStart) { startTime = newStart; }
 void Event::setEndTime(const QDateTime& newEnd) { endTime = newEnd; }
 void Event::setParticipants(const QVector<User*>& newParts) { participants = newParts; }
@@ -125,7 +125,7 @@ QString Event::formattedEnd() const {
 }
 
 QString Event::summary() const {
-    QString locName = (location ? location->getName() : "Неизвестно");
+    QString locName = location;
     return QString("%1 [%2 — %3] (%4)")
         .arg(title)
         .arg(formattedStart())

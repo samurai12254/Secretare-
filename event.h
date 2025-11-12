@@ -18,7 +18,7 @@ class Event {
 private:
     QString id;                      ///< Уникальный идентификатор события
     QString title;                   ///< Название события
-    Department* location;            ///< Место проведения (указатель на объект Department)
+    QString location;            ///< Место проведения (указатель на объект Department)
     QDateTime startTime;             ///< Время начала
     QDateTime endTime;               ///< Время окончания
     QVector<User*> participants;     ///< Участники события
@@ -30,7 +30,7 @@ public:
     // --- Конструкторы ---
     Event();
     Event(QString title,
-          Department* location,
+          QString location,
           QDateTime startTime,
           QDateTime endTime,
           QString& participantsString,   // "ivan, petr, anna"
@@ -39,7 +39,7 @@ public:
           QString description = "",
           bool isInternal = true);
     Event(QString title,
-          Department* location,
+          QString location,
           QDateTime startTime,
           QDateTime endTime,
           QVector<User*> participants,
@@ -50,7 +50,7 @@ public:
     // --- Геттеры ---
     QString getId() const;
     QString getTitle() const;
-    Department* getLocation() const;
+    QString getLocation() const;
     QDateTime getStartTime() const;
     QDateTime getEndTime() const;
     QVector<User*> getParticipants() const;
@@ -60,7 +60,7 @@ public:
 
     // --- Сеттеры ---
     void setTitle(const QString& newTitle);
-    void setLocation(Department* newLoc);
+    void setLocation(QString newLoc);
     void setStartTime(const QDateTime& newStart);
     void setEndTime(const QDateTime& newEnd);
     void setParticipants(const QVector<User*>& newParts);

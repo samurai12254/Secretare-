@@ -42,11 +42,8 @@ void MailSystem::sendReminder(User* user, Event event) {
     
     // Получаем информацию о месте проведения
     QString locationName = "Не указано";
-    Department* location = event.getLocation();
-    if (location) {
-        locationName = location->getName();
-    }
-    
+    QString location = event.getLocation();
+    locationName = location;
     // Получаем информацию о важности
     QString importance = event.getImportance();
     QString importanceText;

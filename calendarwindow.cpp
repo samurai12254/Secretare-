@@ -10,6 +10,7 @@
 #include <QTimeEdit>
 #include <QPushButton>
 #include <QMessageBox>
+#include <QComboBox>
 
 CalendarWindow::CalendarWindow(QWidget *parent)
     : QWidget(parent)
@@ -172,7 +173,8 @@ void CalendarWindow::onDateClicked(const QDate &date)
     bool hasEvents = false;
 
     // Перебираем все события
-    for (const Event &ev : events)
+    Event need_ev;
+    for ( Event &ev : events)
     {
         if (ev.getStartTime().date() == date)
         {
@@ -201,7 +203,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
             eventLayout->addWidget(editBtn);
             eventLayout->addWidget(deleteBtn);
             layout->addWidget(eventWidget);
-
+            need_ev = ev;
             QString eventId = ev.getId(); // сохраняем ID события для лямбды
 
             // --- Редактирование события ---
@@ -247,6 +249,22 @@ void CalendarWindow::onDateClicked(const QDate &date)
                 QLineEdit *durEdit = new QLineEdit(QString::number(oldDuration), &editDialog);
                 editLayout->addWidget(durLabel);
                 editLayout->addWidget(durEdit);
+                // --- Важность ---
+                QLabel *importanceLabel = new QLabel("Importance:", &editDialog);
+                QComboBox *importanceBox = new QComboBox(&editDialog);
+                importanceBox->addItems({"Низкая", "Средняя", "Высокая"});
+                importanceBox->setCurrentText(ev.getImportance());
+                editLayout->addWidget(importanceLabel);
+                editLayout->addWidget(importanceBox);
+
+                // --- Локация ---
+                QLabel *locationLabel = new QLabel("Location:", &editDialog);
+                QLineEdit *locationEdit = new QLineEdit(&editDialog);
+                if (ev.getLocation()) {
+                    locationEdit->setText(ev.getLocation()->getName());
+                }
+                editLayout->addWidget(locationLabel);
+                editLayout->addWidget(locationEdit);
 
                 QHBoxLayout *buttons = new QHBoxLayout();
                 QPushButton *okBtn = new QPushButton("Save", &editDialog);
@@ -257,39 +275,55 @@ void CalendarWindow::onDateClicked(const QDate &date)
 
                 connect(okBtn, &QPushButton::clicked, &editDialog, &QDialog::accept);
                 connect(cancelBtn, &QPushButton::clicked, &editDialog, &QDialog::reject);
+                bool add_event = 0;
+                while (!add_event && editDialog.exec() == QDialog::Accepted) {
 
-                if (editDialog.exec() == QDialog::Accepted)
-                {
+                    Event newEvent;
+                    newEvent.setTitle(titleEdit->text());
+                    newEvent.setDescription(descEdit->text());
+
+                    QDateTime newStart(date, timeEdit->time());
+                    newEvent.setStartTime(newStart);
+
+                    bool okDur;
+                    int newDuration = durEdit->text().toInt(&okDur);
+                    if (!okDur || newDuration <= 0) newDuration = 60;
+                    newEvent.setEndTime(newStart.addSecs(newDuration * 60));
+                    QString importance = importanceBox->currentText();
+                    QString locName = locationEdit->text().trimmed();
+
+                    Department *loc = nullptr;
+                    if (!locName.isEmpty()) {
+                        loc = new Department(1,locName);
+                    }
+
+                    newEvent.setImportance(importance);
+                    newEvent.setLocation(loc);
+
+                    newEvent.clearParticipants();
+                    newEvent.setParticipantsFromString(participantsEdit->text(), *allUsers);
+
+                    // Проверка конфликтов
+                    if (hasConflict(newEvent, &need_ev)) {
+                        continue; // снова показать окно
+                    }
+
+                    // Обновляем существующее событие
                     for (Event &editable : events)
                     {
                         if (editable.getId() == eventId)
                         {
-                            editable.setTitle(titleEdit->text());
-                            editable.setDescription(descEdit->text());
-
-                            // новое время начала
-                            QDateTime newStart(date, timeEdit->time());
-                            editable.setStartTime(newStart);
-
-                            // читаем duration
-                            bool okDur;
-                            int newDuration = durEdit->text().toInt(&okDur);
-                            if (!okDur || newDuration <= 0) newDuration = 60;
-
-                            // новое время окончания
-                            editable.setEndTime(newStart.addSecs(newDuration * 60));
-
-                            // --- пересоздаём участников ---
-                            editable.clearParticipants();
-                            editable.setParticipantsFromString(participantsEdit->text(), *allUsers);
+                            editable = newEvent; // или присвоить по полям
                             break;
                         }
                     }
 
+                    add_event = true;
                     highlightDates();
                     dialog->close();
                     QMetaObject::invokeMethod(this, "onDateClicked", Qt::QueuedConnection, Q_ARG(QDate, date));
                 }
+
             });
 
             // --- Удаление события ---
@@ -357,6 +391,19 @@ void CalendarWindow::addEvent(const QDate &date)
     durationEdit->setText("60"); // по умолчанию 60 минут
     mainLayout->addWidget(durationLabel);
     mainLayout->addWidget(durationEdit);
+    // --- Важность ---
+    QLabel *importanceLabel = new QLabel("Importance:", &dialog);
+    QComboBox *importanceBox = new QComboBox(&dialog);
+    importanceBox->addItems({"Низкая", "Средняя", "Высокая"});
+    importanceBox->setCurrentText("Средняя");
+    mainLayout->addWidget(importanceLabel);
+    mainLayout->addWidget(importanceBox);
+
+    // --- Локация ---
+    QLabel *locationLabel = new QLabel("Location:", &dialog);
+    QLineEdit *locationEdit = new QLineEdit(&dialog);
+    mainLayout->addWidget(locationLabel);
+    mainLayout->addWidget(locationEdit);
 
     // --- 🔹 Участники (через запятую) ---
     QLabel *participantsLabel = new QLabel("Participants (comma separated logins):", &dialog);
@@ -395,18 +442,25 @@ void CalendarWindow::addEvent(const QDate &date)
         QDateTime start(date, startTime);
         QDateTime end = start.addSecs(durationMinutes * 60); // вычисляем end
 
-        // ✅ Используем новый конструктор с participantsString
+        QString importance = importanceBox->currentText();
+        QString locName = locationEdit->text().trimmed();
+
+        Department *loc = nullptr;
+        if (!locName.isEmpty()) {
+            loc = new Department(1,locName); // если Department можно создать вручную
+        }
+
         Event newEvent(
             title,
-            nullptr,                // location (можно добавить позже)
+            loc,
             start,
             end,
-            participantsStr,        // строка логинов
-            *allUsers,               // список всех пользователей
-            "Средняя",
+            participantsStr,
+            *allUsers,
+            importance,
             desc
             );
-        // Проверка на конфликт
+
         if (hasConflict(newEvent)) {
             continue; // Не добавляем, если нашли пересечение
         }

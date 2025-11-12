@@ -35,9 +35,66 @@ QVector<Event> CalendarWindow::getAllStartEvents(const QDate& start, const QDate
     }
     return result;
 }
+void CalendarWindow::DellPassEvents(QDateTime& finish){
+    QVector <Event> GoodEvents;
+    for(Event ev : events){
+        QDateTime eventFinishDate = ev.getEndTime();
+        if(eventFinishDate > finish){
+            GoodEvents.push_back(ev);
+        }
+    }
+    events = GoodEvents;
+}
 CalendarWindow::CalendarWindow(QVector<User*> *users, QWidget *parent)
     : QWidget(parent), allUsers(users)
 {
+}
+bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent)
+{
+    for (const Event& existing : events)
+    {
+        // Если это то же событие (при редактировании) — пропускаем
+        if (ignoreEvent && existing.getId() == ignoreEvent->getId())
+            continue;
+
+        // Проверка пересечения по времени
+        bool timeOverlap = newEvent.getStartTime() < existing.getEndTime() &&
+                           newEvent.getEndTime() > existing.getStartTime();
+
+        if (!timeOverlap)
+            continue;
+
+        // Проверка общих участников
+        for (User* u1 : newEvent.getParticipants())
+        {
+            for (User* u2 : existing.getParticipants())
+            {
+                if (u1->GetId() == u2->GetId())
+                {
+                    QMessageBox::warning(
+                        this, "Конфликт участников",
+                        QString("Пользователь '%1' уже занят в событии '%2'")
+                            .arg(u1->GetLogin(), existing.getTitle())
+                        );
+                    return true;
+                }
+            }
+        }
+
+        // Проверка совпадения мест
+        if (newEvent.getLocation() && existing.getLocation() &&
+            newEvent.getLocation() == existing.getLocation())
+        {
+            QMessageBox::warning(
+                this, "Конфликт мест",
+                QString("Место '%1' уже занято событием '%2'")
+                    .arg(newEvent.getLocation()->getName(), existing.getTitle())
+                );
+            return true;
+        }
+    }
+
+    return false; // конфликтов нет
 }
 
 void CalendarWindow::highlightDates()

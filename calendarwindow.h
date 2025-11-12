@@ -15,6 +15,8 @@ public:
     QVector<Event> getALLEvents();
     bool runAuthorization();
     void buildCalendarUI();
+    bool hasConflict(const Event& newEvent, const Event* ignoreEvent = nullptr);
+    void DellPassEvents(QDateTime &finish);
 
 private slots:
     void onDateClicked(const QDate &date);

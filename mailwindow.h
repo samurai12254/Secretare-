@@ -43,6 +43,7 @@ private:
     
     // Логин элементы
     QLineEdit *usernameInput;
+    QLineEdit *passwordInput;
     QPushButton *loginButton;
     
     // Почта элементы

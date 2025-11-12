@@ -14,6 +14,7 @@ void Simulator::run() {
         stepSimulation();
     }
     QDateTime infinity = QDateTime::currentDateTime().addYears(200000);
+    mailSystem->clearOldMessages(infinity);
     calendar->DellPassEvents(infinity);
     qDebug() << "Симуляция завершена!";
     qDebug() << "Общее количество отправленных сообщений:" << totalMessagesSent;
@@ -51,6 +52,6 @@ void Simulator::sendReminders() {
 
 void Simulator::stepSimulation() {
     currentTime = currentTime.addSecs(stepMinutes * 60);
-    updateCalendar();    
-    sendReminders();
+    updateCalendar();
+    if (RemindersEnabled) sendReminders();
 }

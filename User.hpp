@@ -33,6 +33,7 @@ public:
     QString GetLogin() const;
     QString GetRole() const;
     QString GetDepartment() const;
+    QString GetPassword() const;
     
 };
 

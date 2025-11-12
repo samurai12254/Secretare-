@@ -35,10 +35,15 @@ void MailWindow::setupLoginUI()
     usernameInput = new QLineEdit();
     usernameInput->setPlaceholderText("Имя пользователя");
     
+    passwordInput = new QLineEdit();
+    passwordInput->setEchoMode(QLineEdit::Password);
+    passwordInput->setPlaceholderText("Пароль пользователя");
+
     loginButton = new QPushButton("Войти");
     
     layout->addWidget(titleLabel);
     layout->addWidget(usernameInput);
+    layout->addWidget(passwordInput);
     layout->addWidget(loginButton);
     layout->addStretch();
 }
@@ -111,6 +116,7 @@ void MailWindow::handleLogout()
 void MailWindow::handleLogin()
 {
     QString username = usernameInput->text().trimmed();
+    QString password = passwordInput->text().trimmed();
     
     if (username.isEmpty()) {
         showError("Введите имя пользователя");
@@ -119,6 +125,10 @@ void MailWindow::handleLogin()
     
     if (!Users.contains(username)) {
         showError("Пользователь не найден");
+        return;
+    }
+    if (Users[username]->GetPassword() != password) {
+        showError("Некорректный пароль");
         return;
     }
     

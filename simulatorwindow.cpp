@@ -84,10 +84,6 @@ void SimulatorWindow::setupSettingsPage()
     additionalParamsLayout->addWidget(remindersCheckBox);
 
     // Разрешение конфликтов
-    conflictResolutionCheckBox = new QCheckBox("Включить автоматическое разрешение конфликтов");
-    conflictResolutionCheckBox->setChecked(true);
-    additionalParamsLayout->addWidget(conflictResolutionCheckBox);
-
     settingsLayout->addWidget(additionalParamsGroup);
 
     // Кнопка управления пользователями
@@ -145,7 +141,6 @@ void SimulatorWindow::handleStartSimulation()
                                 .arg(periodSpinBox->value())
                                 .arg(stepComboBox->currentText())
                                 .arg(remindersCheckBox->isChecked() ? "Включены" : "Отключены")
-                                .arg(conflictResolutionCheckBox->isChecked() ? "Включено" : "Отключено")
                                 .arg(usersList->size()),
                                 QMessageBox::Yes | QMessageBox::No);
 
@@ -162,8 +157,8 @@ void SimulatorWindow::handleStartSimulation()
         } else if (currentStep == "1 час") {
             now_simulator->setStepMinutes(60);
         }
-        now_simulator->setEndTime(currentTime.addDays(currentPeriod));
-        
+        now_simulator -> setEndTime(currentTime.addDays(currentPeriod));
+        now_simulator -> setRemindersEnabled(getCalendarRemindersEnabled());
         QMessageBox::information(this, "Успех", 
                                 QString("Моделирование запущено с параметрами:\n"
                                        "Период: %1 дней\n"
@@ -427,7 +422,3 @@ bool SimulatorWindow::getCalendarRemindersEnabled() const
     return remindersCheckBox->isChecked();
 }
 
-bool SimulatorWindow::getConflictResolutionEnabled() const
-{
-    return conflictResolutionCheckBox->isChecked();
-}

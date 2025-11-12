@@ -50,5 +50,9 @@ QString User::GetDepartment() const {
     return department; 
 }
 
+QString User::GetPassword() const {
+    return password;
+}
+
 
 

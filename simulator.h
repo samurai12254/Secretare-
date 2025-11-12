@@ -15,6 +15,7 @@ private:
     QDateTime currentTime;
     QDateTime endTime;
     int stepMinutes;
+    bool RemindersEnabled;
 
     // --- Статистика симуляции ---
     int totalMessagesSent = 0;        ///< Общее количество отправленных сообщений
@@ -39,6 +40,7 @@ public:
     void setCurrentTime(const QDateTime& newTime) { currentTime = newTime; }
     void setEndTime(const QDateTime& newEndTime) { endTime = newEndTime; }
     void setStepMinutes(int newStepMinutes) { stepMinutes = newStepMinutes; }
+    void setRemindersEnabled(bool isEnabled = false) {RemindersEnabled = isEnabled;}
 
     void stepSimulation();
 

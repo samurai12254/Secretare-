@@ -64,7 +64,6 @@ private:
     QSpinBox *periodSpinBox;
     QComboBox *stepComboBox;
     QCheckBox *remindersCheckBox;
-    QCheckBox *conflictResolutionCheckBox;
     QPushButton *startButton;
     QPushButton *manageUsersButton; // Новая кнопка для управления пользователями
 

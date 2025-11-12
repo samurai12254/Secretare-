@@ -47,8 +47,7 @@ public:
     
 
 private:
-   // void updateCalendar();
-    //void checkConflicts();
+    void updateCalendar();
     void sendReminders();
 };
 

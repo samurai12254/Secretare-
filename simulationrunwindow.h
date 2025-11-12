@@ -22,12 +22,12 @@ public:
 public slots:
     void handleNextStep();
     void updateDisplay();
-    void handlePauseResume();
     void handleStopSimulation();
 
 signals:
     void simulationFinished();
     void returnToSettings();
+    void handlePauseResume();
 
 private:
     void setupUI();

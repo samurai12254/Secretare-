@@ -11,10 +11,10 @@ void Simulator::run() {
     while (currentTime <= endTime) {
         //updateCalendar();
         //checkConflicts();
-        sendReminders();
         stepSimulation();
     }
-
+    QDateTime infinity = QDateTime::currentDateTime().addYears(200000);
+    calendar->DellPassEvents(infinity);
     qDebug() << "Симуляция завершена!";
     qDebug() << "Общее количество отправленных сообщений:" << totalMessagesSent;
     qDebug() << "Общее количество обработанных событий:" << totalEventsProcessed;
@@ -22,19 +22,9 @@ void Simulator::run() {
     qDebug() << "Общее количество участников всех событий:" << totalParticipantsCount;
 }
 
-/*void Simulator::updateCalendar() {
-    QVector<Event*> pastEvents = calendar->getPastEvents(currentTime);
-    for (auto* e : pastEvents) {
-        calendar->removeEvent(e->getId());
-        qDebug() << "Удалено прошедшее событие:" << e->summary();
-        totalEventsProcessed++;  // учёт события
-        // учёт участников
-        totalParticipantsCount += e->getParticipants().size();
-        for (auto* u : e->getParticipants()) {
-            if (u) uniqueParticipants.insert(u->GetId());
-        }
-    }
-}*/
+void Simulator::updateCalendar() {
+    calendar->DellPassEvents(currentTime);
+}
 
 
 
@@ -61,6 +51,6 @@ void Simulator::sendReminders() {
 
 void Simulator::stepSimulation() {
     currentTime = currentTime.addSecs(stepMinutes * 60);
-    //updateCalendar();
+    updateCalendar();    
     sendReminders();
 }

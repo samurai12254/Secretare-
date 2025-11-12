@@ -31,8 +31,10 @@ void SimulatorWindow::setupUI()
     mainStack->setCurrentWidget(settingsPage);
     
     // Подключаем сигналы от simulationPage
+
     connect(simulationPage, &SimulationRunWindow::simulationFinished, this, &SimulatorWindow::handleSimulationFinished);
     connect(simulationPage, &SimulationRunWindow::returnToSettings, this, &SimulatorWindow::handleReturnToSettings);
+    connect(simulationPage, &SimulationRunWindow::handlePauseResume, this, &SimulatorWindow::handlePause);
 }
 
 void SimulatorWindow::setupSettingsPage()
@@ -191,6 +193,19 @@ void SimulatorWindow::handleReturnToSettings()
     mainStack->setCurrentWidget(settingsPage);
 }
 
+void SimulatorWindow::handlePause() {
+    mainStack->setCurrentWidget(settingsPage);
+    startButton->setText("Продолжить симуляцию");
+    disconnect(startButton, &QPushButton::clicked, this, &SimulatorWindow::handleStartSimulation);
+    connect(startButton, &QPushButton::clicked, this, &SimulatorWindow::handleResume);
+}
+
+void SimulatorWindow::handleResume(){
+    mainStack->setCurrentWidget(simulationPage);
+    startButton->setText("Запустить моделирование");
+    disconnect(startButton, &QPushButton::clicked, this, &SimulatorWindow::handleResume);
+    connect(startButton, &QPushButton::clicked, this, &SimulatorWindow::handleStartSimulation);
+}
 
 void SimulatorWindow::setupUsersSection()
 {
@@ -308,6 +323,10 @@ void SimulatorWindow::handleAddUser()
     for (const User* user : *(usersList)) {
         if (user->GetId() == new_user_p->GetId()) {
             QMessageBox::warning(this, "Ошибка", "Пользователь с таким ID уже существует");
+            return;
+        }
+        if (user->GetLogin() == new_user_p->GetLogin()) {
+            QMessageBox::warning(this, "Ошибка", "Пользователь с таким логином уже существует");
             return;
         }
     }

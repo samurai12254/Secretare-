@@ -136,8 +136,7 @@ void SimulatorWindow::handleStartSimulation()
                                        "Период: %1 дней\n"
                                        "Шаг: %2\n"
                                        "Напоминания: %3\n"
-                                       "Разрешение конфликтов: %4\n"
-                                       "Пользователей: %5")
+                                       "Пользователей: %4")
                                 .arg(periodSpinBox->value())
                                 .arg(stepComboBox->currentText())
                                 .arg(remindersCheckBox->isChecked() ? "Включены" : "Отключены")

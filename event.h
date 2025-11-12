@@ -75,7 +75,6 @@ public:
     void setParticipantsFromString(const QString& participantsString, const QVector<User*>& allUsers);
 
     // --- Проверка конфликтов ---
-    bool conflictsWith(const Event& other) const;
 
     // --- Вспомогательные методы ---
     int durationMinutes() const;

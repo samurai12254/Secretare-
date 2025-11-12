@@ -4,46 +4,8 @@
 #include <QString>
 #include <QDateTime>
 #include <QHash>
-#include "event.h"
-#include "Department.hpp"
-#include "User.hpp"
 
 class Calendar
 {
-private:
-    QVector<Event*> events;
-    QVector<Department*> departments;
-    
-    // Вспомогательные методы
-    Event* findEventById(const QString& event_id) const;
-    bool checkTimeConflict(const Event* event1, const Event* event2) const;
 
-public:
-    // Конструктор
-    Calendar() = default;
-    
-    // Основные методы управления событиями
-    void addEvent(Event* event);
-    void updateEvent(const QString& event_id, const QString& new_title, const QString& new_description, 
-    const QString& new_importance, Department* new_location, const QDateTime& new_strart, const QDateTime& new_end, 
-QVector<User*>& new_participiants, bool new_isInternal);
-    void removeEvent(const QString& event_id);
-    
-    // Методы получения событий
-    QVector<Event*> getEventsForDay(const QDate& date) const;
-    QVector<Event*> getEventsForUser(User* user) const;
-    QVector<Event*> getEventsForPeriod(const QDateTime& startPeriod, const QDateTime& endPeriod) const;
-    
-
-    // Анализ событий
-    QVector<QPair<Event*, Event*>> findConflicts() const;
-    QVector<Event*> getPastEvents(const QDateTime& current_time);
-    QVector<Event*> getAllEvents() const;
-    // Управление отделами
-    void addDepartment(Department* department);
-    QVector<Department*> getDepartments() const;
-    
-    // Статистика
-    int getTotalEvents() const;
-    int getTotalDepartments() const;
 };

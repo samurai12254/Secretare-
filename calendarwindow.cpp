@@ -53,48 +53,58 @@ bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent
 {
     for (const Event& existing : events)
     {
-        // Если это то же событие (при редактировании) — пропускаем
+        // Если редактируем — игнорируем само себя
         if (ignoreEvent && existing.getId() == ignoreEvent->getId())
             continue;
 
-        // Проверка пересечения по времени
-        bool timeOverlap = newEvent.getStartTime() < existing.getEndTime() &&
-                           newEvent.getEndTime() > existing.getStartTime();
+        // --- Проверяем пересечение по времени ---
+        bool overlap = newEvent.getStartTime() < existing.getEndTime() &&
+                       newEvent.getEndTime() > existing.getStartTime();
 
-        if (!timeOverlap)
+        if (!overlap)
             continue;
 
-        // Проверка общих участников
-        for (User* u1 : newEvent.getParticipants())
+        // --- Проверяем участников ---
+        for (User* newUser : newEvent.getParticipants())
         {
-            for (User* u2 : existing.getParticipants())
+            if (!newUser) continue;
+            for (User* oldUser : existing.getParticipants())
             {
-                if (u1->GetId() == u2->GetId())
+                if (!oldUser) continue;
+                if (newUser->GetId() == oldUser->GetId())
                 {
                     QMessageBox::warning(
-                        this, "Конфликт участников",
-                        QString("Пользователь '%1' уже занят в событии '%2'")
-                            .arg(u1->GetLogin(), existing.getTitle())
+                        this,
+                        "Conflict Detected",
+                        QString("Пользователь '%1' уже участвует в событии '%2' (%3 - %4)")
+                            .arg(newUser->GetLogin())
+                            .arg(existing.getTitle())
+                            .arg(existing.getStartTime().time().toString("HH:mm"))
+                            .arg(existing.getEndTime().time().toString("HH:mm"))
                         );
                     return true;
                 }
             }
         }
 
-        // Проверка совпадения мест
-        if (newEvent.getLocation() && existing.getLocation() &&
+        // --- Проверяем место ---
+        if (newEvent.getLocation() != nullptr && existing.getLocation() != nullptr &&
             newEvent.getLocation() == existing.getLocation())
         {
             QMessageBox::warning(
-                this, "Конфликт мест",
-                QString("Место '%1' уже занято событием '%2'")
-                    .arg(newEvent.getLocation()->getName(), existing.getTitle())
+                this,
+                "Location Conflict",
+                QString("Место '%1' уже занято другим событием '%2' (%3 - %4)")
+                    .arg(newEvent.getLocation()->getName())
+                    .arg(existing.getTitle())
+                    .arg(existing.getStartTime().time().toString("HH:mm"))
+                    .arg(existing.getEndTime().time().toString("HH:mm"))
                 );
             return true;
         }
     }
 
-    return false; // конфликтов нет
+    return false; // ✅ Нет конфликтов
 }
 
 void CalendarWindow::highlightDates()
@@ -329,7 +339,6 @@ void CalendarWindow::addEvent(const QDate &date)
     QLineEdit *titleEdit = new QLineEdit(&dialog);
     mainLayout->addWidget(titleLabel);
     mainLayout->addWidget(titleEdit);
-
     // --- Описание ---
     QLabel *descLabel = new QLabel("Description:", &dialog);
     QLineEdit *descEdit = new QLineEdit(&dialog);
@@ -367,8 +376,8 @@ void CalendarWindow::addEvent(const QDate &date)
     connect(cancelBtn, &QPushButton::clicked, &dialog, &QDialog::reject);
 
     // --- Ожидаем ответ пользователя ---
-    if (dialog.exec() == QDialog::Accepted)
-    {
+    bool add_event = 0;
+    while (!add_event && dialog.exec() == QDialog::Accepted){
         QString title = titleEdit->text().trimmed();
         QString desc = descEdit->text().trimmed();
         QString participantsStr = participantsEdit->text().trimmed();
@@ -397,9 +406,14 @@ void CalendarWindow::addEvent(const QDate &date)
             "Средняя",
             desc
             );
+        // Проверка на конфликт
+        if (hasConflict(newEvent)) {
+            continue; // Не добавляем, если нашли пересечение
+        }
+
 
         events.append(newEvent);
-
         highlightDates();
+        add_event = 1;
     }
 }

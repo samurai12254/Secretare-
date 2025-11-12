@@ -109,24 +109,7 @@ bool Event::removeParticipant(User* user) {
 }
 
 // --- Проверка конфликтов ---
-bool Event::conflictsWith(const Event& other) const {
-    bool overlapTime = (startTime < other.endTime && endTime > other.startTime);
 
-    bool sameParticipant = false;
-    for (auto* p : participants) {
-        if (!p) continue;
-        for (auto* q : other.participants)
-            if (q && p->GetId() == q->GetId()) {
-                sameParticipant = true;
-                break;
-            }
-        if (sameParticipant) break;
-    }
-
-    bool sameLocation = (location == other.location);
-
-    return overlapTime && (sameParticipant || sameLocation);
-}
 
 // --- Вспомогательные методы ---
 int Event::durationMinutes() const {

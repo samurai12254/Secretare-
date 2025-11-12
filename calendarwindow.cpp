@@ -298,6 +298,16 @@ void CalendarWindow::onDateClicked(const QDate &date)
                     newEvent.setParticipantsFromString(participantsEdit->text(), *allUsers);
 
                     // Проверка конфликтов
+                    if (newEvent.getTitle().isEmpty()) {
+                        QMessageBox::warning(this, "Error", "Заголовок пуст!");
+                        continue;
+                    }else if(newEvent.getDescription().isEmpty()){
+                        QMessageBox::warning(this, "Error", "Описание пусто");
+                        continue;
+                    }else if(locName.isEmpty()){
+                        QMessageBox::warning(this, "Error", "Не указана локация проведения");
+                        continue;
+                    }
                     if (hasConflict(newEvent, &need_ev)) {
                         continue; // снова показать окно
                     }
@@ -425,7 +435,10 @@ void CalendarWindow::addEvent(const QDate &date)
         QTime startTime = timeEdit->time();
 
         if (title.isEmpty()) {
-            QMessageBox::warning(this, "Error", "Title cannot be empty!");
+            QMessageBox::warning(this, "Error", "Заголовок пуст!");
+            return;
+        }else if(desc.isEmpty()){
+            QMessageBox::warning(this, "Error", "Описание пусто");
             return;
         }
         // --- Создаём событие ---
@@ -438,8 +451,10 @@ void CalendarWindow::addEvent(const QDate &date)
 
         QString importance = importanceBox->currentText();
         QString locName = locationEdit->text().trimmed();
-
-
+        if(locName.isEmpty()){
+            QMessageBox::warning(this, "Error", "Не указана локация проведения");
+            return;
+        }
         Event newEvent(
             title,
             locName,

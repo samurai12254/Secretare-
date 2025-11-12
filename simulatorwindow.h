@@ -50,6 +50,8 @@ private slots:
     void toggleUsersManagement(); // Новый слот для переключения видимости
     void handleSimulationFinished();
     void handleReturnToSettings();
+    void handlePause();
+    void handleResume();
 
 private:
     void setupUI();

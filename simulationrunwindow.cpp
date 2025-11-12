@@ -49,7 +49,7 @@ void SimulationRunWindow::setupUI()
     pauseResumeButton = new QPushButton("Пауза");
     pauseResumeButton->setStyleSheet("QPushButton { background-color: #FF9800; color: white; font-weight: bold; padding: 8px; }");
 
-    stopButton = new QPushButton("Остановить");
+    stopButton = new QPushButton("Завершить");
     stopButton->setStyleSheet("QPushButton { background-color: #F44336; color: white; font-weight: bold; padding: 8px; }");
 
     controlLayout->addWidget(nextStepButton);
@@ -112,33 +112,18 @@ void SimulationRunWindow::handleNextStep()
                        .arg(now_simulator->getCurrentTime().toString("dd.MM.yyyy hh:mm:ss")));
 }
 
-void SimulationRunWindow::handlePauseResume()
-{
-    if (isPaused) {
-        simulationTimer->start();
-        pauseResumeButton->setText("Пауза");
-        statusLabel->setText("Симуляция запущена");
-        statusLabel->setStyleSheet("font-size: 12px; color: #2E8B57;");
-        isPaused = false;
-    } else {
-        simulationTimer->stop();
-        pauseResumeButton->setText("Продолжить");
-        statusLabel->setText("Симуляция на паузе");
-        statusLabel->setStyleSheet("font-size: 12px; color: #FF9800;");
-        isPaused = true;
-    }
-}
+
 
 void SimulationRunWindow::handleStopSimulation()
 {
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Остановка симуляции", 
-                                "Вы уверены, что хотите остановить симуляцию?",
+    reply = QMessageBox::question(this, "Завершение симуляции", 
+                                "Вы уверены, что хотите завершить симуляцию?",
                                 QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
-        simulationTimer->stop();
-        emit returnToSettings();
+        now_simulator->run();
+        emit simulationFinished();
     }
 }
 

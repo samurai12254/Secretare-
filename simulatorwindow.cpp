@@ -1,5 +1,6 @@
 #include "simulatorwindow.h"
 
+
 SimulatorWindow::SimulatorWindow(QHash<QString, User*>* init_users_hash, QList<User*>* user_list_p, Simulator* init_simulator, QWidget *parent)
     : QWidget(parent), now_simulator(init_simulator), usersList(user_list_p), users_hash_table(init_users_hash), usersSectionVisible(false)
 {
@@ -8,13 +9,41 @@ SimulatorWindow::SimulatorWindow(QHash<QString, User*>* init_users_hash, QList<U
 
 void SimulatorWindow::setupUI()
 {
+    // Создаем основной стек для переключения между настройками и симуляцией
+    mainStack = new QStackedWidget(this);
+    
+    // Страница настроек
+    settingsPage = new QWidget();
+    setupSettingsPage();
+    
+    // Страница выполнения симуляции
+    simulationPage = new SimulationRunWindow(now_simulator);
+    
+    // Добавляем страницы в стек
+    mainStack->addWidget(settingsPage);
+    mainStack->addWidget(simulationPage);
+    
+    // Устанавливаем основной layout
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->addWidget(mainStack);
+    
+    // По умолчанию показываем страницу настроек
+    mainStack->setCurrentWidget(settingsPage);
+    
+    // Подключаем сигналы от simulationPage
+    connect(simulationPage, &SimulationRunWindow::simulationFinished, this, &SimulatorWindow::handleSimulationFinished);
+    connect(simulationPage, &SimulationRunWindow::returnToSettings, this, &SimulatorWindow::handleReturnToSettings);
+}
+
+void SimulatorWindow::setupSettingsPage()
+{
+    QVBoxLayout *settingsLayout = new QVBoxLayout(settingsPage);
 
     // Заголовок
     QLabel *titleLabel = new QLabel("Параметры моделирования");
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet("font-size: 16px; font-weight: bold;");
-    mainLayout->addWidget(titleLabel);
+    settingsLayout->addWidget(titleLabel);
 
     // Группа основных параметров
     QGroupBox *mainParamsGroup = new QGroupBox("Основные параметры моделирования");
@@ -41,7 +70,7 @@ void SimulatorWindow::setupUI()
     stepLayout->addStretch();
     mainParamsLayout->addLayout(stepLayout);
 
-    mainLayout->addWidget(mainParamsGroup);
+    settingsLayout->addWidget(mainParamsGroup);
 
     // Группа дополнительных параметров
     QGroupBox *additionalParamsGroup = new QGroupBox("Дополнительные параметры");
@@ -57,36 +86,111 @@ void SimulatorWindow::setupUI()
     conflictResolutionCheckBox->setChecked(true);
     additionalParamsLayout->addWidget(conflictResolutionCheckBox);
 
-    mainLayout->addWidget(additionalParamsGroup);
+    settingsLayout->addWidget(additionalParamsGroup);
 
     // Кнопка управления пользователями
     manageUsersButton = new QPushButton("Управление пользователями");
     manageUsersButton->setStyleSheet("QPushButton { background-color: #2196F3; color: white; font-weight: bold; padding: 8px; }");
-    mainLayout->addWidget(manageUsersButton);
+    settingsLayout->addWidget(manageUsersButton);
 
     // Секция управления пользователями (изначально скрыта)
     setupUsersSection();
-    usersGroup->setVisible(false); // Скрываем группу пользователей
+    usersGroup->setVisible(false);
 
     // Кнопка запуска
     startButton = new QPushButton("Запустить моделирование");
     startButton->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; font-weight: bold; padding: 8px; }");
-    mainLayout->addWidget(startButton);
+    settingsLayout->addWidget(startButton);
 
     // Информационная панель
     QLabel *infoLabel = new QLabel("Моделирование будет выполнено для выбранного периода с указанным шагом.\n"
                                   "При включенных опциях будут генерироваться напоминания и разрешаться конфликты.");
     infoLabel->setWordWrap(true);
     infoLabel->setStyleSheet("background-color: #EE204D; padding: 10px; border-radius: 5px;");
-    mainLayout->addWidget(infoLabel);
+    settingsLayout->addWidget(infoLabel);
 
-    mainLayout->addStretch();
+    settingsLayout->addStretch();
 
     // Подключаем сигналы
     connect(startButton, &QPushButton::clicked, this, &SimulatorWindow::handleStartSimulation);
     connect(periodSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &SimulatorWindow::validateInput);
-    connect(manageUsersButton, &QPushButton::clicked, this, &SimulatorWindow::toggleUsersManagement); // Новое соединение
+    connect(manageUsersButton, &QPushButton::clicked, this, &SimulatorWindow::toggleUsersManagement);
 }
+
+void SimulatorWindow::handleStartSimulation()
+{
+    // Проверяем, что есть хотя бы один пользователь
+    if (usersList->isEmpty()) {
+        QMessageBox::warning(this, "Ошибка", "Добавьте хотя бы одного пользователя перед запуском моделирования");
+        return;
+    }
+
+    // Проверяем валидность введенных данных
+    if (periodSpinBox->value() < 7 || periodSpinBox->value() > 30) {
+        QMessageBox::warning(this, "Ошибка", "Период моделирования должен быть от 7 до 30 дней");
+        return;
+    }
+
+    // Показываем подтверждение
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Подтверждение", 
+                                QString("Начать моделирование?\n\n"
+                                       "Период: %1 дней\n"
+                                       "Шаг: %2\n"
+                                       "Напоминания: %3\n"
+                                       "Разрешение конфликтов: %4\n"
+                                       "Пользователей: %5")
+                                .arg(periodSpinBox->value())
+                                .arg(stepComboBox->currentText())
+                                .arg(remindersCheckBox->isChecked() ? "Включены" : "Отключены")
+                                .arg(conflictResolutionCheckBox->isChecked() ? "Включено" : "Отключено")
+                                .arg(usersList->size()),
+                                QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        // Устанавливаем текущее время как время начала симуляции
+        QDateTime currentTime = QDateTime::currentDateTime().date().startOfDay();
+        now_simulator->setCurrentTime(currentTime);
+        
+        // Сохраняем настройки в симулятор
+        int currentPeriod = periodSpinBox->value();
+        QString currentStep = stepComboBox->currentText();
+        if (currentStep == "30 минут") {
+            now_simulator->setStepMinutes(30);
+        } else if (currentStep == "1 час") {
+            now_simulator->setStepMinutes(60);
+        }
+        now_simulator->setEndTime(currentTime.addDays(currentPeriod));
+        
+        QMessageBox::information(this, "Успех", 
+                                QString("Моделирование запущено с параметрами:\n"
+                                       "Период: %1 дней\n"
+                                       "Шаг: %2\n"
+                                       "Пользователей: %3\n"
+                                       "Время начала: %4")
+                                .arg(currentPeriod)
+                                .arg(currentStep)
+                                .arg(usersList->size())
+                                .arg(currentTime.toString("dd.MM.yyyy hh:mm:ss")));
+        
+        // Переключаемся на страницу выполнения симуляции
+        mainStack->setCurrentWidget(simulationPage);
+        emit simulationStarted();
+    }
+}
+
+void SimulatorWindow::handleSimulationFinished()
+{
+    QMessageBox::information(this, "Симуляция завершена", 
+                            "Симуляция успешно завершена. Возврат к настройкам.");
+    mainStack->setCurrentWidget(settingsPage);
+}
+
+void SimulatorWindow::handleReturnToSettings()
+{
+    mainStack->setCurrentWidget(settingsPage);
+}
+
 
 void SimulatorWindow::setupUsersSection()
 {
@@ -149,12 +253,13 @@ void SimulatorWindow::setupUsersSection()
     connect(usersTable, &QTableWidget::itemSelectionChanged, this, &SimulatorWindow::handleUserSelection);
 
     // Добавляем группу в основной layout
-    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(this->layout());
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(settingsPage->layout());
     if (mainLayout) {
         // Вставляем после кнопки управления пользователями
         mainLayout->insertWidget(3, usersGroup);
     }
 }
+
 
 void SimulatorWindow::toggleUsersManagement()
 {
@@ -171,58 +276,7 @@ void SimulatorWindow::toggleUsersManagement()
     }
 }
 
-void SimulatorWindow::handleStartSimulation()
-{
-    // Проверяем, что есть хотя бы один пользователь
-    if (usersList->isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Добавьте хотя бы одного пользователя перед запуском моделирования");
-        return;
-    }
 
-    // Проверяем валидность введенных данных
-    if (periodSpinBox->value() < 7 || periodSpinBox->value() > 30) {
-        QMessageBox::warning(this, "Ошибка", "Период моделирования должен быть от 7 до 30 дней");
-        return;
-    }
-
-    // Показываем подтверждение
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Подтверждение", 
-                                QString("Начать моделирование?\n\n"
-                                       "Период: %1 дней\n"
-                                       "Шаг: %2\n"
-                                       "Напоминания: %3\n"
-                                       "Разрешение конфликтов: %4\n"
-                                       "Пользователей: %5")
-                                .arg(periodSpinBox->value())
-                                .arg(stepComboBox->currentText())
-                                .arg(remindersCheckBox->isChecked() ? "Включены" : "Отключены")
-                                .arg(conflictResolutionCheckBox->isChecked() ? "Включено" : "Отключено")
-                                .arg(usersList->size()),
-                                QMessageBox::Yes | QMessageBox::No);
-
-    if (reply == QMessageBox::Yes) {
-        // Сохраняем настройки в симулятор
-        int currentPeriod = periodSpinBox->value();
-        QString currentStep = stepComboBox->currentText();
-        if (currentStep == "30 минут") {
-            now_simulator->setStepMinutes(30);
-        } else if (currentStep == "1 час") {
-            now_simulator->setStepMinutes(60);
-        }
-        now_simulator->setEndTime(now_simulator->getCurrentTime().addDays(currentPeriod));
-        
-        QMessageBox::information(this, "Успех", 
-                                QString("Моделирование запущено с параметрами:\n"
-                                       "Период: %1 дней\n"
-                                       "Шаг: %2\n"
-                                       "Пользователей: %3")
-                                .arg(currentPeriod)
-                                .arg(currentStep)
-                                .arg(usersList->size()));
-        emit simulationStarted();
-    }
-}
 
 void SimulatorWindow::validateInput()
 {

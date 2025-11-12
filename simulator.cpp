@@ -3,14 +3,14 @@
 #include "simulator.h"
 #include <QDebug>
 
-Simulator::Simulator(Calendar* cal, MailSystem* mail, QDateTime start, QDateTime end, int step)
+Simulator::Simulator(CalendarWindow* cal, MailSystem* mail, QDateTime start, QDateTime end, int step)
     : calendar(cal), mailSystem(mail), currentTime(start), endTime(end), stepMinutes(step)
 {}
 
 void Simulator::run() {
     while (currentTime <= endTime) {
-        updateCalendar();
-        checkConflicts();
+        //updateCalendar();
+        //checkConflicts();
         sendReminders();
         stepSimulation();
     }
@@ -22,7 +22,7 @@ void Simulator::run() {
     qDebug() << "Общее количество участников всех событий:" << totalParticipantsCount;
 }
 
-void Simulator::updateCalendar() {
+/*void Simulator::updateCalendar() {
     QVector<Event*> pastEvents = calendar->getPastEvents(currentTime);
     for (auto* e : pastEvents) {
         calendar->removeEvent(e->getId());
@@ -34,34 +34,33 @@ void Simulator::updateCalendar() {
             if (u) uniqueParticipants.insert(u->GetId());
         }
     }
-}
+}*/
 
-void Simulator::checkConflicts() {
-    QVector<Event*> events = calendar->getEventsForDay(currentTime.date());
-    for (int i = 0; i < events.size(); ++i) {
-        for (int j = i + 1; j < events.size(); ++j) {
-            if (events[i]->conflictsWith(*events[j])) {
-                qDebug() << "⚠️ Конфликт между событиями:"
-                         << events[i]->summary() << "и" << events[j]->summary();
-            }
-        }
-    }
-}
+
 
 void Simulator::sendReminders() {
-    QVector<Event*> events = calendar->getEventsForPeriod(currentTime, currentTime.addSecs(stepMinutes * 60));
-    for (auto* e : events) {
-        for (auto* user : e->getParticipants()) {
-            if (!user) continue;
-            mailSystem->sendReminder(user, e);
-            totalMessagesSent++;        // учитываем каждое сообщение
-            uniqueParticipants.insert(user->GetId());
+    if (currentTime != currentTime.date().startOfDay()) return;
+    QVector<Event> events = {};
+    QVector<QVector<QString>> impotances = {{},{"Низкая"},{"Низкая","Средняя"}};
+    for (int i = 1;i <= 3; ++i){
+        events = calendar->getAllStartEvents(currentTime.date().addDays(i), currentTime.date().addDays(i));
+        for (auto e : events) {
+            if (impotances[i-1].contains(e.getImportance())) continue;
+            for (auto* user : e.getParticipants()) {
+                if (!user) continue;
+                mailSystem->sendReminder(user, e);
+                totalMessagesSent++;        // учитываем каждое сообщение
+                uniqueParticipants.insert(user->GetId());
+            }
+            totalEventsProcessed++;         // каждый обработанный event
+            totalParticipantsCount += e.getParticipants().size();
         }
-        totalEventsProcessed++;         // каждый обработанный event
-        totalParticipantsCount += e->getParticipants().size();
     }
+    
 }
 
 void Simulator::stepSimulation() {
     currentTime = currentTime.addSecs(stepMinutes * 60);
+    //updateCalendar();
+    sendReminders();
 }

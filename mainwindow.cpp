@@ -18,13 +18,15 @@ MainWindow::MainWindow(QWidget *parent)
     // Стек для переключения страниц
     stack = new QStackedWidget();
     MailSystem* MSystem = new MailSystem();
-    Simulator* now_simulator = new Simulator(nullptr, MSystem, QDateTime::currentDateTime(), QDateTime::currentDateTime(), 0);
     QVector<User*>* Users = new QVector<User*>;
     QHash<QString, User*>* Users_hash_table = nullptr;
     mailPage = new MailWindow(Users_hash_table,MSystem);
+    calendarPage = new CalendarWindow(Users,this);
+    Simulator* now_simulator = new Simulator(calendarPage, MSystem, QDateTime::currentDateTime().date().startOfDay(),
+     QDateTime::currentDateTime().date().startOfDay(), 0);
+
     simulatorPage = new SimulatorWindow(Users_hash_table,Users,now_simulator);
 
-    calendarPage = new CalendarWindow(Users,this);
 
     // Добавляем страницы в стек
     stack->addWidget(simulatorPage);

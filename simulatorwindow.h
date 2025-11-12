@@ -2,6 +2,7 @@
 #define SIMULATORWINDOW_H
 
 #include <QWidget>
+#include <QStackedWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSpinBox>
@@ -12,12 +13,13 @@
 #include <QGroupBox>
 #include <QMessageBox>
 #include <QLineEdit>
-#include <QListWidget>
 #include <QTableWidget>
 #include <QHeaderView>
 
 #include "simulator.h"
 #include "User.hpp"
+#include "simulationrunwindow.h"
+
 
 class SimulatorWindow : public QWidget
 {
@@ -46,12 +48,15 @@ private slots:
     void handleRemoveUser();
     void handleUserSelection();
     void toggleUsersManagement(); // Новый слот для переключения видимости
+    void handleSimulationFinished();
+    void handleReturnToSettings();
 
 private:
     void setupUI();
     void setupUsersSection();
     void updateUsersTable();
     bool validateUserInput();
+    void setupSettingsPage();
 
     // UI элементы
     QSpinBox *periodSpinBox;
@@ -76,6 +81,10 @@ private:
     QList<User*>* usersList;
     QHash<QString, User*>* users_hash_table;
     bool usersSectionVisible; // Флаг видимости секции пользователей
+
+    QStackedWidget *mainStack;
+    QWidget *settingsPage;
+    SimulationRunWindow *simulationPage;
 };
 
 #endif // SIMULATORWINDOW_H

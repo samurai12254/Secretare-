@@ -5,12 +5,12 @@
 #include <QDateTime>
 #include <QVector>
 #include <QSet>
-#include "Calendar.hpp"
+#include "calendarwindow.h"
 #include "MailSystem.hpp"
 
 class Simulator {
 private:
-    Calendar* calendar;
+    CalendarWindow* calendar;
     MailSystem* mailSystem;
     QDateTime currentTime;
     QDateTime endTime;
@@ -23,7 +23,7 @@ private:
     int totalParticipantsCount = 0;   ///< Суммарное количество участников всех событий
 
 public:
-    Simulator(Calendar* cal, MailSystem* mail, QDateTime start, QDateTime end, int step);
+    Simulator(CalendarWindow* cal, MailSystem* mail, QDateTime start, QDateTime end, int step);
 
     void run();
 
@@ -32,20 +32,24 @@ public:
     int getTotalEventsProcessed() const { return totalEventsProcessed; }
     int getUniqueParticipantsCount() const { return uniqueParticipants.size(); }
     int getTotalParticipantsCount() const { return totalParticipantsCount; }
+    int getTotalMessagesSent() {return totalMessagesSent;}
 
-    void setCalendar(Calendar* newCalendar) { calendar = newCalendar; }
+    void setCalendar(CalendarWindow* newCalendar) { calendar = newCalendar; }
     void setMailSystem(MailSystem* newMailSystem) { mailSystem = newMailSystem; }
     void setCurrentTime(const QDateTime& newTime) { currentTime = newTime; }
     void setEndTime(const QDateTime& newEndTime) { endTime = newEndTime; }
     void setStepMinutes(int newStepMinutes) { stepMinutes = newStepMinutes; }
 
+    void stepSimulation();
+
     QDateTime getCurrentTime() {return currentTime;}
+    QDateTime getEndTime() {return endTime;}
+    
 
 private:
-    void updateCalendar();
-    void checkConflicts();
+   // void updateCalendar();
+    //void checkConflicts();
     void sendReminders();
-    void stepSimulation();
 };
 
 

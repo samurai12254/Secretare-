@@ -29,26 +29,26 @@ void MailSystem::sendMessageToMultiple(const QVector<User*>& users, const QStrin
     }
 }
 
-void MailSystem::sendReminder(User* user, Event* event) {
-    if (!user || !event) {
+void MailSystem::sendReminder(User* user, Event event) {
+    if (!user) {
         qWarning() << "Невозможно отправить напоминание: пользователь или событие не указаны";
         return;
     }
     
     QString userLogin = user->GetLogin();
-    QString eventTitle = event->getTitle();
-    QString eventStart = event->formattedStart();
-    QString eventEnd = event->formattedEnd();
+    QString eventTitle = event.getTitle();
+    QString eventStart = event.formattedStart();
+    QString eventEnd = event.formattedEnd();
     
     // Получаем информацию о месте проведения
     QString locationName = "Не указано";
-    Department* location = event->getLocation();
+    Department* location = event.getLocation();
     if (location) {
         locationName = location->getName();
     }
     
     // Получаем информацию о важности
-    QString importance = event->getImportance();
+    QString importance = event.getImportance();
     QString importanceText;
     if (importance == "высокая") {
         importanceText = "🔴 ВАЖНОЕ СОБЫТИЕ";
@@ -67,13 +67,13 @@ void MailSystem::sendReminder(User* user, Event* event) {
         "🏢 Место: " + locationName + "\n";
     
     // Добавляем описание, если оно есть
-    QString description = event->getDescription();
+    QString description = event.getDescription();
     if (!description.isEmpty()) {
         body += "📝 Описание: " + description + "\n";
     }
     
     // Добавляем информацию о участниках
-    QVector<User*> participants = event->getParticipants();
+    QVector<User*> participants = event.getParticipants();
     if (!participants.isEmpty()) {
         body += "👥 Участники: ";
         for (int i = 0; i < participants.size(); ++i) {
@@ -91,7 +91,7 @@ void MailSystem::sendReminder(User* user, Event* event) {
     
     // Отправляем сообщение
     Message message("Система напоминаний", userLogin, subject, body, 
-                   QDateTime::currentDateTime(), event->getId());
+                   QDateTime::currentDateTime(), event.getId());
     
     // Добавляем в inbox пользователя
     inbox[userLogin].append(message);

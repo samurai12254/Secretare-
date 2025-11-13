@@ -59,15 +59,6 @@ void SimulationRunWindow::setupUI()
     mainLayout->addWidget(controlGroup);
 
     // Группа статистики
-    QGroupBox *statsGroup = new QGroupBox("Статистика симуляции");
-    QVBoxLayout *statsLayout = new QVBoxLayout(statsGroup);
-    
-    statsTextEdit = new QTextEdit();
-    statsTextEdit->setReadOnly(true);
-    statsTextEdit->setMaximumHeight(120);
-    statsLayout->addWidget(statsTextEdit);
-    
-    mainLayout->addWidget(statsGroup);
 
     // Группа логов
     QGroupBox *logGroup = new QGroupBox("Лог симуляции");
@@ -145,20 +136,4 @@ void SimulationRunWindow::updateDisplay()
                       .arg(days).arg(hours).arg(minutes));
     
     // Обновляем статистику
-    updateStatistics();
-}
-
-void SimulationRunWindow::updateStatistics()
-{
-    QString statsText = QString(
-        "Сообщений отправлено: %1\n"
-        "Событий обработано: %2\n"
-        "Уникальных участников: %3\n"
-        "Всего участников: %4")
-        .arg(now_simulator->getTotalMessagesSent())
-        .arg(now_simulator->getTotalEventsProcessed())
-        .arg(now_simulator->getUniqueParticipantsCount())
-        .arg(now_simulator->getTotalParticipantsCount());
-    
-    statsTextEdit->setText(statsText);
 }

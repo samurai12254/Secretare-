@@ -3,8 +3,10 @@
 #include <QCalendarWidget>
 #include <QMap>
 #include <QVector>
+#include <set>
 #include "event.h"
 #include "conflictresolver.h"
+
 
 class CalendarWindow : public QWidget
 {

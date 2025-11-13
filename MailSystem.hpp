@@ -12,6 +12,7 @@ class MailSystem
 private:
     QHash<QString, QVector<Message>> inbox;  // ключ: логин пользователя
     QVector<Message> outbox;                 // исходящие письма
+    int messages_sent;
 
 public:
     // Конструктор
@@ -37,7 +38,8 @@ public:
     // Статистика
     int getMessageCount(User* user) const;
     int getUnreadCount(User* user) const;
-    int getTotalMessages() const;
+    int getTotalMessagesSent() const {return messages_sent;};
+    void setMessagesSend(int count) {messages_sent = count;};
     
     // Работа с исходящими
     QVector<Message> getOutbox() const;

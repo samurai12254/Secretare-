@@ -17,6 +17,7 @@ void MailSystem::sendMessage(User* user, const QString& subject,
     outbox.append(message);
     
     qDebug() << "Сообщение отправлено пользователю" << userLogin;
+    messages_sent++;
 }
 
 // Отправка сообщения нескольким пользователям
@@ -196,13 +197,7 @@ int MailSystem::getUnreadCount(User* user) const {
     return getUnreadMessages(user).size();
 }
 
-int MailSystem::getTotalMessages() const {
-    int total = 0;
-    for (const QVector<Message>& messages : inbox) {
-        total += messages.size();
-    }
-    return total;
-}
+
 
 // Получение исходящих сообщений
 QVector<Message> MailSystem::getOutbox() const {

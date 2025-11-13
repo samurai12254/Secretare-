@@ -86,6 +86,9 @@ private:
     QStackedWidget *mainStack;
     QWidget *settingsPage;
     SimulationRunWindow *simulationPage;
+
+    int added_users_count;
+    int deleted_users_count;
 };
 
 #endif // SIMULATORWINDOW_H

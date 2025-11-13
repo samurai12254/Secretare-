@@ -31,7 +31,6 @@ signals:
 
 private:
     void setupUI();
-    void updateStatistics();
 
     Simulator* now_simulator;
     QTimer* simulationTimer;

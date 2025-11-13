@@ -327,7 +327,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
                 
                 for(auto el : events){
                     if(el.getId() == eventId){
-                        allDeleteEvents.push_back(el.getTitle());
+                        allDelEvents.push_back(el.getTitle());
                     }
                 }
                 auto it = std::remove_if(events.begin(), events.end(),

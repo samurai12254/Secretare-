@@ -3,7 +3,9 @@
 #include <QCalendarWidget>
 #include <QMap>
 #include <QVector>
+#include <set>
 #include "event.h"
+
 
 class CalendarWindow : public QWidget
 {

@@ -144,6 +144,9 @@ void SimulatorWindow::handleStartSimulation()
                                 QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
+        added_users_count = 0;
+        deleted_users_count = 0;
+        now_simulator->setMessagesSend(0);
         // Устанавливаем текущее время как время начала симуляции
         QDateTime currentTime = QDateTime::currentDateTime().date().startOfDay();
         now_simulator->setCurrentTime(currentTime);
@@ -178,7 +181,18 @@ void SimulatorWindow::handleStartSimulation()
 void SimulatorWindow::handleSimulationFinished()
 {
     QMessageBox::information(this, "Симуляция завершена", 
-                            "Симуляция успешно завершена. Возврат к настройкам.");
+                            QString("Симуляция успешно завершена. Статистика:\n"
+                            "Количество конфликтов: %1\n"
+                            "Количество успешных изменений событий: %2\n"
+                            "Количество отправленных писем:%3\n"
+                            "Количество добавленных за симуляцию участников: %4"
+                            "(внимание, участники добавленные вне нее учитываются)\n"
+                            "Количество удаленных за симуляцию участников: %5\n")
+                            .arg(now_simulator->GetCountConflicts())
+                            .arg(now_simulator->GetCountPositiveEdit())
+                            .arg(now_simulator->getTotalMessagesSent())
+                            .arg(added_users_count)
+                            .arg(deleted_users_count));
     mainStack->setCurrentWidget(settingsPage);
 }
 
@@ -337,6 +351,7 @@ void SimulatorWindow::handleAddUser()
     userDepartmentInput->clear();
     
     QMessageBox::information(this, "Успех", "Пользователь успешно добавлен");
+    added_users_count++;
 }
 
 void SimulatorWindow::handleRemoveUser()
@@ -349,6 +364,7 @@ void SimulatorWindow::handleRemoveUser()
         users_hash_table->erase(users_hash_table->find(user_login));
         updateUsersTable();
         QMessageBox::information(this, "Успех", QString("Пользователь %1 удален").arg(userId));
+        deleted_users_count++;
     }
 }
 

@@ -41,6 +41,14 @@ public:
     void setEndTime(const QDateTime& newEndTime) { endTime = newEndTime; }
     void setStepMinutes(int newStepMinutes) { stepMinutes = newStepMinutes; }
     void setRemindersEnabled(bool isEnabled = false) {RemindersEnabled = isEnabled;}
+    
+    int GetCountConflicts(){return calendar->GetCountConflicts();};
+    int GetCountPositiveEdit(){return calendar->GetCountPositiveEdit();};
+    QVector <QString> GetAllDeleteEvents() {return calendar->GetAllDeleteEvents();};
+    QVector <QString> GetAllLocation(){return calendar->GetAllLocation();};
+    int getTotalMessagesSent() const {return mailSystem->getTotalMessagesSent();};
+    void setMessagesSend(int count) {mailSystem->setMessagesSend(count);};
+
 
     void stepSimulation();
 

@@ -4,6 +4,7 @@
 #include <QMap>
 #include <QVector>
 #include "event.h"
+#include "conflictresolver.h"
 
 class CalendarWindow : public QWidget
 {
@@ -15,7 +16,7 @@ public:
     QVector<Event> getALLEvents();
     bool runAuthorization();
     void buildCalendarUI();
-    bool hasConflict(const Event& newEvent, const Event* ignoreEvent = nullptr);
+    ConflictResolver hasConflict(const Event& newEvent, const Event* ignoreEvent = nullptr);
     void DellPassEvents(QDateTime &finish);
     int GetCountConflicts();
     int GetCountPositiveEdit();

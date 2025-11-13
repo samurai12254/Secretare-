@@ -4,10 +4,10 @@
 #pragma once
 #include <QVector>
 
-/**
- * @brief Класс ConflictResolver отвечает за обнаружение и разрешение конфликтов между событиями.
- */
 class ConflictResolver {
+public:
+    int has_conflict = 0;
+    QVector<QString> busyUser,busyLocation;
 };
 
 #endif // CONFLICTRESOLVER_H

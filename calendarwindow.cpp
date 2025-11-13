@@ -1,4 +1,5 @@
 #include "calendarwindow.h"
+#include "conflictresolver.h"
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -53,8 +54,9 @@ CalendarWindow::CalendarWindow(QVector<User*> *users, QWidget *parent)
     : QWidget(parent), allUsers(users)
 {
 }
-bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent)
+ConflictResolver CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent)
 {
+    ConflictResolver result;
     for (const Event& existing : events)
     {
         // Если редактируем — игнорируем само себя
@@ -75,26 +77,19 @@ bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent
             for (User* oldUser : existing.getParticipants())
             {
                 if (!oldUser) continue;
-                if (newUser->GetId() == oldUser->GetId())
+                if (newUser->GetId() == oldUser->GetId() && (result.busyUser.empty() || result.busyUser.back() != newUser->GetLogin()))
                 {
-                    QMessageBox::warning(
-                        this,
-                        "Conflict Detected",
-                        QString("Пользователь '%1' уже участвует в событии '%2' (%3 - %4)")
-                            .arg(newUser->GetLogin())
-                            .arg(existing.getTitle())
-                            .arg(existing.getStartTime().time().toString("HH:mm"))
-                            .arg(existing.getEndTime().time().toString("HH:mm"))
-                        );
-                    return true;
+                    result.has_conflict = 1;
+                    result.busyUser.push_back(newUser->GetLogin());
                 }
             }
         }
-
         // --- Проверяем место ---
         if (newEvent.getLocation() != nullptr && existing.getLocation() != nullptr &&
             newEvent.getLocation() == existing.getLocation())
         {
+            result.has_conflict = 2;
+            result.busyLocation.push_back(newEvent.getLocation());
             QMessageBox::warning(
                 this,
                 "Location Conflict",
@@ -104,11 +99,14 @@ bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent
                     .arg(existing.getStartTime().time().toString("HH:mm"))
                     .arg(existing.getEndTime().time().toString("HH:mm"))
                 );
-            return true;
+            return result;
         }
     }
-
-    return false; // ✅ Нет конфликтов
+    if(result.has_conflict){
+        return result;
+    }
+    result.has_conflict = 0;
+    return result; // ✅ Нет конфликтов
 }
 
 void CalendarWindow::highlightDates()
@@ -311,9 +309,43 @@ void CalendarWindow::onDateClicked(const QDate &date)
                         QMessageBox::warning(this, "Error", "Не указана локация проведения");
                         continue;
                     }
-                    if (hasConflict(newEvent, &need_ev)) {
+                    auto conflict = hasConflict(newEvent, &need_ev);
+                    if (conflict.has_conflict != 0) {
                         cnt_conflicts++;
-                        continue; // снова показать окно
+                        QString problem;
+                        if(conflict.has_conflict == 1){
+                            problem += "Эти пользователи уже заняты:\n";
+                            for(auto el : conflict.busyUser){
+                                problem += el + ", ";
+                            }
+                            problem += "Хотите удалить занятых участников и продолжить?";
+                            auto reply = QMessageBox::question(
+                                this,
+                                "Конфликт расписания",
+                                problem,
+                                QMessageBox::Yes | QMessageBox::No
+                                );
+
+                            if (reply == QMessageBox::Yes) {
+                                QVector<User*> filtered;
+                                for (User* u : newEvent.getParticipants()) {
+                                    bool is_bad = 0;
+                                    for(auto el : conflict.busyUser){
+                                        if(el == u->GetLogin()){
+                                            is_bad = 1;
+                                        }
+                                    }
+                                    if(!is_bad){
+                                        filtered.push_back(u);
+                                    }
+                                }
+                                newEvent.setParticipants(filtered);
+                            } else {
+                                continue; // вернуться к редактированию
+                            }
+                        }else{
+                            continue;
+                        }
                     }
 
                     // Обновляем существующее событие
@@ -340,7 +372,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
                 // Удаляем по уникальному ID
                 for(auto el : events){
                     if(el.getId() == eventId){
-                        allDeleteEvents.push_back(el.getTitle());
+                        allDelEvents.push_back(el.getTitle());
                     }
                 }
                 auto it = std::remove_if(events.begin(), events.end(),
@@ -475,13 +507,44 @@ void CalendarWindow::addEvent(const QDate &date)
             importance,
             desc
             );
-
-        if (hasConflict(newEvent)) {
+        auto conflict = hasConflict(newEvent);
+        if (conflict.has_conflict != 0) {
             cnt_conflicts++;
-            continue; // Не добавляем, если нашли пересечение
+            QString problem;
+            if(conflict.has_conflict == 1){
+                problem += "Эти пользователи уже заняты:\n";
+                for(auto el : conflict.busyUser){
+                    problem += el + ", ";
+                }
+                problem += "Хотите удалить занятых участников и продолжить?";
+                auto reply = QMessageBox::question(
+                    this,
+                    "Конфликт расписания",
+                    problem,
+                    QMessageBox::Yes | QMessageBox::No
+                    );
+
+                if (reply == QMessageBox::Yes) {
+                    QVector<User*> filtered;
+                    for (User* u : newEvent.getParticipants()) {
+                        bool is_bad = 0;
+                        for(auto el : conflict.busyUser){
+                            if(el == u->GetLogin()){
+                                is_bad = 1;
+                            }
+                        }
+                        if(!is_bad){
+                            filtered.push_back(u);
+                        }
+                    }
+                    newEvent.setParticipants(filtered);
+                } else {
+                    continue; // вернуться к редактированию
+                }
+            }else{
+                continue;
+            }
         }
-
-
         events.append(newEvent);
         highlightDates();
         add_event = 1;

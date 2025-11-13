@@ -23,13 +23,10 @@ QVector<Event> CalendarWindow::getALLEvents(){
 QVector<Event> CalendarWindow::getAllStartEvents(const QDate& start, const QDate& finish) const
 {
     QVector<Event> result;
-    // Для удобства создаём отсортированные диапазоны дат
     QDate startDate = start <= finish ? start : finish;
     QDate endDate   = start <= finish ? finish : start;
     for (Event ev : events) {
         QDate eventStartDate = ev.getStartTime().date();
-
-        // Проверяем: дата начала события попадает в диапазон [startDate; endDate]
         if (eventStartDate >= startDate && eventStartDate <= endDate) {
             result.push_back(ev);
         }
@@ -57,18 +54,13 @@ bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent
 {
     for (const Event& existing : events)
     {
-        // Если редактируем — игнорируем само себя
         if (ignoreEvent && existing.getId() == ignoreEvent->getId())
             continue;
-
-        // --- Проверяем пересечение по времени ---
         bool overlap = newEvent.getStartTime() < existing.getEndTime() &&
                        newEvent.getEndTime() > existing.getStartTime();
 
         if (!overlap)
             continue;
-
-        // --- Проверяем участников ---
         for (User* newUser : newEvent.getParticipants())
         {
             if (!newUser) continue;
@@ -90,8 +82,6 @@ bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent
                 }
             }
         }
-
-        // --- Проверяем место ---
         if (newEvent.getLocation() != nullptr && existing.getLocation() != nullptr &&
             newEvent.getLocation() == existing.getLocation())
         {
@@ -108,7 +98,7 @@ bool CalendarWindow::hasConflict(const Event& newEvent, const Event* ignoreEvent
         }
     }
 
-    return false; // ✅ Нет конфликтов
+    return false; 
 }
 
 void CalendarWindow::highlightDates()
@@ -138,7 +128,7 @@ bool CalendarWindow::runAuthorization()
         if (u->GetLogin() == login && u->CheckPassword(pass))
         {
             currentUser = u;
-            // Если UI ещё не создан, создаём
+            
             if (!uiBuilt) buildCalendarUI();
             return true;
         }
@@ -169,13 +159,12 @@ void CalendarWindow::buildCalendarUI()
 void CalendarWindow::onDateClicked(const QDate &date)
 {
     QDialog *dialog = new QDialog(this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose); // автоматически удаляется при закрытии
+    dialog->setAttribute(Qt::WA_DeleteOnClose); 
     dialog->setWindowTitle("Events on " + date.toString());
     QVBoxLayout *layout = new QVBoxLayout(dialog);
 
     bool hasEvents = false;
 
-    // Перебираем все события
     Event need_ev;
     for ( Event &ev : events)
     {
@@ -207,9 +196,9 @@ void CalendarWindow::onDateClicked(const QDate &date)
             eventLayout->addWidget(deleteBtn);
             layout->addWidget(eventWidget);
             need_ev = ev;
-            QString eventId = ev.getId(); // сохраняем ID события для лямбды
+            QString eventId = ev.getId();
 
-            // --- Редактирование события ---
+            // Редакт события
             connect(editBtn, &QPushButton::clicked, this, [=]() {
                 QDialog editDialog(dialog);
                 editDialog.setWindowTitle("Edit Event");
@@ -232,11 +221,10 @@ void CalendarWindow::onDateClicked(const QDate &date)
                 editLayout->addWidget(timeLabel);
                 editLayout->addWidget(timeEdit);
 
-                // --- Participants ---
                 QLabel *participantsLabel = new QLabel("Participants (comma separated):", &editDialog);
                 QLineEdit *participantsEdit = new QLineEdit(&editDialog);
 
-                // заполняем строку логинов обратно
+                
                 QStringList logins;
                 for (User* u : ev.getParticipants()) {
                     if (u) logins.append(u->GetLogin());
@@ -246,13 +234,13 @@ void CalendarWindow::onDateClicked(const QDate &date)
                 editLayout->addWidget(participantsLabel);
                 editLayout->addWidget(participantsEdit);
 
-                // --- Duration ---
+                
                 int oldDuration = ev.getStartTime().secsTo(ev.getEndTime()) / 60;
                 QLabel *durLabel = new QLabel("Duration (minutes):", &editDialog);
                 QLineEdit *durEdit = new QLineEdit(QString::number(oldDuration), &editDialog);
                 editLayout->addWidget(durLabel);
                 editLayout->addWidget(durEdit);
-                // --- Важность ---
+                
                 QLabel *importanceLabel = new QLabel("Importance:", &editDialog);
                 QComboBox *importanceBox = new QComboBox(&editDialog);
                 importanceBox->addItems({"Низкая", "Средняя", "Высокая"});
@@ -260,7 +248,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
                 editLayout->addWidget(importanceLabel);
                 editLayout->addWidget(importanceBox);
 
-                // --- Локация ---
+               
                 QLabel *locationLabel = new QLabel("Location:", &editDialog);
                 QLineEdit *locationEdit = new QLineEdit(&editDialog);
                 locationEdit->setText(ev.getLocation());
@@ -300,7 +288,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
                     newEvent.clearParticipants();
                     newEvent.setParticipantsFromString(participantsEdit->text(), *allUsers);
 
-                    // Проверка конфликтов
+                    
                     if (newEvent.getTitle().isEmpty()) {
                         QMessageBox::warning(this, "Error", "Заголовок пуст!");
                         continue;
@@ -313,15 +301,14 @@ void CalendarWindow::onDateClicked(const QDate &date)
                     }
                     if (hasConflict(newEvent, &need_ev)) {
                         cnt_conflicts++;
-                        continue; // снова показать окно
+                        continue;
                     }
 
-                    // Обновляем существующее событие
                     for (Event &editable : events)
                     {
                         if (editable.getId() == eventId)
                         {
-                            editable = newEvent; // или присвоить по полям
+                            editable = newEvent; 
                             break;
                         }
                     }
@@ -335,9 +322,9 @@ void CalendarWindow::onDateClicked(const QDate &date)
 
             });
 
-            // --- Удаление события ---
+            
             connect(deleteBtn, &QPushButton::clicked, this, [this, dialog, date, eventId]() {
-                // Удаляем по уникальному ID
+                
                 for(auto el : events){
                     if(el.getId() == eventId){
                         allDeleteEvents.push_back(el.getTitle());
@@ -347,9 +334,9 @@ void CalendarWindow::onDateClicked(const QDate &date)
                                          [&](const Event &e) { return e.getId() == eventId; });
                 events.erase(it, events.end());
 
-                highlightDates(); // обновляем подсветку
+                highlightDates(); 
 
-                // Закрываем текущий диалог и снова открываем список событий
+                
                 dialog->close();
                 QMetaObject::invokeMethod(this, "onDateClicked", Qt::QueuedConnection, Q_ARG(QDate, date));
             });
@@ -376,24 +363,24 @@ void CalendarWindow::onDateClicked(const QDate &date)
 
 void CalendarWindow::addEvent(const QDate &date)
 {
-    // --- Создаём окно для добавления события ---
+    
     QDialog dialog(this);
     dialog.setWindowTitle("Add New Event");
 
     QVBoxLayout *mainLayout = new QVBoxLayout(&dialog);
 
-    // --- Название ---
+    
     QLabel *titleLabel = new QLabel("Title:", &dialog);
     QLineEdit *titleEdit = new QLineEdit(&dialog);
     mainLayout->addWidget(titleLabel);
     mainLayout->addWidget(titleEdit);
-    // --- Описание ---
+    
     QLabel *descLabel = new QLabel("Description:", &dialog);
     QLineEdit *descEdit = new QLineEdit(&dialog);
     mainLayout->addWidget(descLabel);
     mainLayout->addWidget(descEdit);
 
-    // --- Время ---
+    
     QLabel *timeLabel = new QLabel("Start Time:", &dialog);
     QTimeEdit *timeEdit = new QTimeEdit(QTime::currentTime(), &dialog);
     timeEdit->setDisplayFormat("HH:mm");
@@ -405,7 +392,7 @@ void CalendarWindow::addEvent(const QDate &date)
     durationEdit->setText("60"); // по умолчанию 60 минут
     mainLayout->addWidget(durationLabel);
     mainLayout->addWidget(durationEdit);
-    // --- Важность ---
+    
     QLabel *importanceLabel = new QLabel("Importance:", &dialog);
     QComboBox *importanceBox = new QComboBox(&dialog);
     importanceBox->addItems({"Низкая", "Средняя", "Высокая"});
@@ -413,19 +400,19 @@ void CalendarWindow::addEvent(const QDate &date)
     mainLayout->addWidget(importanceLabel);
     mainLayout->addWidget(importanceBox);
 
-    // --- Локация ---
+    
     QLabel *locationLabel = new QLabel("Location:", &dialog);
     QLineEdit *locationEdit = new QLineEdit(&dialog);
     mainLayout->addWidget(locationLabel);
     mainLayout->addWidget(locationEdit);
 
-    // --- 🔹 Участники (через запятую) ---
+    
     QLabel *participantsLabel = new QLabel("Participants (comma separated logins):", &dialog);
     QLineEdit *participantsEdit = new QLineEdit(&dialog);
     mainLayout->addWidget(participantsLabel);
     mainLayout->addWidget(participantsEdit);
 
-    // --- Кнопки ---
+    
     QHBoxLayout *buttons = new QHBoxLayout();
     QPushButton *okBtn = new QPushButton("OK", &dialog);
     QPushButton *cancelBtn = new QPushButton("Cancel", &dialog);
@@ -436,7 +423,7 @@ void CalendarWindow::addEvent(const QDate &date)
     connect(okBtn, &QPushButton::clicked, &dialog, &QDialog::accept);
     connect(cancelBtn, &QPushButton::clicked, &dialog, &QDialog::reject);
 
-    // --- Ожидаем ответ пользователя ---
+    
     bool add_event = 0;
     while (!add_event && dialog.exec() == QDialog::Accepted){
         QString title = titleEdit->text().trimmed();
@@ -451,13 +438,13 @@ void CalendarWindow::addEvent(const QDate &date)
             QMessageBox::warning(this, "Error", "Описание пусто");
             return;
         }
-        // --- Создаём событие ---
+        
         bool ok;
         int durationMinutes = durationEdit->text().toInt(&ok);
-        if (!ok || durationMinutes <= 0) durationMinutes = 60; // default 60
+        if (!ok || durationMinutes <= 0) durationMinutes = 60; 
 
         QDateTime start(date, startTime);
-        QDateTime end = start.addSecs(durationMinutes * 60); // вычисляем end
+        QDateTime end = start.addSecs(durationMinutes * 60);
 
         QString importance = importanceBox->currentText();
         QString locName = locationEdit->text().trimmed();
@@ -478,7 +465,7 @@ void CalendarWindow::addEvent(const QDate &date)
 
         if (hasConflict(newEvent)) {
             cnt_conflicts++;
-            continue; // Не добавляем, если нашли пересечение
+            continue;
         }
 
 

@@ -42,6 +42,9 @@ void CalendarWindow::DellPassEvents(QDateTime& finish){
         QDateTime eventFinishDate = ev.getEndTime();
         if(eventFinishDate > finish){
             GoodEvents.push_back(ev);
+        }else{
+            allFinishEvents.push_back(ev.getTitle());
+            allLocationFinish.insert(ev.getLocation());
         }
     }
     events = GoodEvents;
@@ -309,6 +312,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
                         continue;
                     }
                     if (hasConflict(newEvent, &need_ev)) {
+                        cnt_conflicts++;
                         continue; // снова показать окно
                     }
 
@@ -323,6 +327,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
                     }
 
                     add_event = true;
+                    cnt_good_edit++;
                     highlightDates();
                     dialog->close();
                     QMetaObject::invokeMethod(this, "onDateClicked", Qt::QueuedConnection, Q_ARG(QDate, date));
@@ -333,6 +338,11 @@ void CalendarWindow::onDateClicked(const QDate &date)
             // --- Удаление события ---
             connect(deleteBtn, &QPushButton::clicked, this, [this, dialog, date, eventId]() {
                 // Удаляем по уникальному ID
+                for(auto el : events){
+                    if(el.getId() == eventId){
+                        allDeleteEvents.push_back(el.getTitle());
+                    }
+                }
                 auto it = std::remove_if(events.begin(), events.end(),
                                          [&](const Event &e) { return e.getId() == eventId; });
                 events.erase(it, events.end());
@@ -467,6 +477,7 @@ void CalendarWindow::addEvent(const QDate &date)
             );
 
         if (hasConflict(newEvent)) {
+            cnt_conflicts++;
             continue; // Не добавляем, если нашли пересечение
         }
 
@@ -475,4 +486,26 @@ void CalendarWindow::addEvent(const QDate &date)
         highlightDates();
         add_event = 1;
     }
+}
+
+
+
+int CalendarWindow::GetCountConflicts(){
+    return cnt_conflicts;
+}
+int CalendarWindow::GetCountPositiveEdit(){
+    return cnt_good_edit;
+}
+QVector <QString> CalendarWindow::GetAllFinishEvents(){
+    return allFinishEvents;
+}
+QVector <QString> CalendarWindow::GetAllDeleteEvents(){
+    return allDelEvents;
+}
+QVector <QString> CalendarWindow::GetAllLocation(){
+    QVector <QString> allUniqLocation;
+    for(auto el : allLocationFinish){
+        allUniqLocation.push_back(el);
+    }
+    return allUniqLocation;
 }

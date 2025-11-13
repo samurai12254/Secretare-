@@ -17,6 +17,11 @@ public:
     void buildCalendarUI();
     bool hasConflict(const Event& newEvent, const Event* ignoreEvent = nullptr);
     void DellPassEvents(QDateTime &finish);
+    int GetCountConflicts();
+    int GetCountPositiveEdit();
+    QVector <QString> GetAllFinishEvents();
+    QVector <QString> GetAllDeleteEvents();
+    QVector <QString> GetAllLocation();
 
 private slots:
     void onDateClicked(const QDate &date);
@@ -29,5 +34,9 @@ private:
     User *currentUser = nullptr;
     void highlightDates();
     bool uiBuilt = false;
-
+    int cnt_conflicts = 0;
+    int cnt_good_edit = 0;
+    QVector <QString> allFinishEvents;
+    QVector <QString> allDelEvents;
+    std::set <QString> allLocationFinish;
 };

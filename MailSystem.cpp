@@ -185,6 +185,11 @@ void MailSystem::deleteMessage(User* user, int messageIndex) {
     }
 }
 
+void MailSystem::delUserInbox(const QString& username) {
+    if (!inbox.contains(username)) return;
+    inbox.erase(inbox.find(username));
+}
+
 // Статистика
 int MailSystem::getMessageCount(User* user) const {
     if (!user) return 0;

@@ -362,6 +362,7 @@ void SimulatorWindow::handleRemoveUser()
         QString user_login = (*usersList)[currentRow]->GetLogin();
         usersList->removeAt(currentRow);
         users_hash_table->erase(users_hash_table->find(user_login));
+        now_simulator->delUserMailInbox(user_login);
         updateUsersTable();
         QMessageBox::information(this, "Успех", QString("Пользователь %1 удален").arg(userId));
         deleted_users_count++;

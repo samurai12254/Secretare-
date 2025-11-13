@@ -47,8 +47,10 @@ public:
     QVector <QString> GetAllDeleteEvents() {return calendar->GetAllDeleteEvents();};
     QVector <QString> GetAllLocation(){return calendar->GetAllLocation();};
     int getTotalMessagesSent() const {return mailSystem->getTotalMessagesSent();};
-    void setMessagesSend(int count) {mailSystem->setMessagesSend(count);};
 
+
+    void setMessagesSend(int count) {mailSystem->setMessagesSend(count);};
+    void delUserMailInbox(const QString& username) {mailSystem->delUserInbox(username);}
 
     void stepSimulation();
 

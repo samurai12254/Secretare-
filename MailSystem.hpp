@@ -23,7 +23,6 @@ public:
                     const QString& text, const QString& sender="System", const QDateTime& date = QDateTime::currentDateTime());
     void sendMessageToMultiple(const QVector<User*>& users, const QString& subject, 
                               const QString& text, const QString& sender="System", const QDateTime& date = QDateTime::currentDateTime());
-    
     void sendReminder(User* user, Event event);
 
     // Работа с входящими сообщениями
@@ -34,6 +33,8 @@ public:
     // Управление сообщениями
     void clearOldMessages(const QDateTime& cutoffDate);
     void deleteMessage(User* user, int messageIndex);
+
+    void delUserInbox(const QString& username);
     
     // Статистика
     int getMessageCount(User* user) const;

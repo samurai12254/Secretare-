@@ -163,7 +163,9 @@ bool CalendarWindow::findFreeSlotForEvent(
     QTime& suggestedEnd,
     const Event* ignoreEvent)
 {
-    // 1. Собираем все события этого дня
+    QTime dayStart(8, 0);
+    QTime dayEnd(20, 0);
+
     QVector<Event> dayEvents;
     for (const Event& ev : events)
     {
@@ -171,67 +173,66 @@ bool CalendarWindow::findFreeSlotForEvent(
             continue;
 
         if (ev.getStartTime().date() == date)
-            dayEvents.append(ev);
+            dayEvents.push_back(ev);
     }
 
-    // 2. Создаём диапазон дня
-    QTime dayStart(8, 0);   // рабочий день можно менять
-    QTime dayEnd(20, 0);
-
-    QVector<QPair<QTime, QTime>> busy;
-
-    for (const Event& ev : dayEvents)
+    for (QTime t = dayStart; t.addSecs(durationMinutes * 60) <= dayEnd; t = t.addSecs(60))
     {
-        // Если локация та же — занята
-        if (ev.getLocation() == location)
-        {
-            busy.append({ ev.getStartTime().time(), ev.getEndTime().time() });
-            continue;
-        }
+        QTime tEnd = t.addSecs(durationMinutes * 60);
 
-        // Пересекаются участники?
-        for (User* p : participants)
+        bool okSlot = true;
+
+        for (const Event& ev : dayEvents)
         {
-            for (User* ep : ev.getParticipants())
+            QTime evStart = ev.getStartTime().time();
+            QTime evEnd   = ev.getEndTime().time();
+
+            bool overlaps =
+                (t < evEnd && tEnd > evStart);
+
+            if (!overlaps)
+                continue;
+
+            if (ev.getLocation() == location)
             {
-                if (p && ep && p->GetId() == ep->GetId())
-                {
-                    busy.append({ ev.getStartTime().time(), ev.getEndTime().time() });
-                    break;
-                }
+                okSlot = false;
+                break;
             }
+
+            for (User* p : participants)
+            {
+                if (!p) continue;
+
+                for (User* ep : ev.getParticipants())
+                {
+                    if (!ep) continue;
+
+                    if (p->GetId() == ep->GetId())
+                    {
+                        okSlot = false;
+                        break;
+                    }
+                }
+
+                if (!okSlot)
+                    break;
+            }
+
+            if (!okSlot)
+                break;
         }
-    }
 
-    // 3. Добавим границы дня
-    busy.append({ dayEnd, dayEnd });  // чтобы было удобнее искать после последнего
-    busy.append({ dayStart, dayStart });
-
-    // 4. Отсортируем интервалы
-    std::sort(busy.begin(), busy.end(),
-              [](auto& a, auto& b){ return a.first < b.first; });
-
-    // 5. Проходим по промежуткам между занятиями
-    for (int i = 0; i < busy.size() - 1; ++i)
-    {
-        QTime gapStart = busy[i].second;
-        QTime gapEnd   = busy[i+1].first;
-
-        if (gapStart < dayStart) gapStart = dayStart;
-        if (gapEnd > dayEnd) gapEnd = dayEnd;
-
-        int gapMinutes = gapStart.secsTo(gapEnd) / 60;
-
-        if (gapMinutes >= durationMinutes)
+        if (okSlot)
         {
-            suggestedStart = gapStart;
-            suggestedEnd = gapStart.addSecs(durationMinutes * 60);
-            return true; // слот найден
+            suggestedStart = t;
+            suggestedEnd   = tEnd;
+            return true;
         }
     }
 
     return false;
 }
+
 
 
 void CalendarWindow::onDateClicked(const QDate &date)
@@ -442,7 +443,7 @@ void CalendarWindow::onDateClicked(const QDate &date)
                                     }
                                     newEvent.setParticipants(filtered);
                                 } else {
-                                    continue; // вернуться к редактированию
+                                    continue;
                                 }
                             }
                             else {
@@ -673,7 +674,7 @@ void CalendarWindow::addEvent(const QDate &date)
                         }
                         newEvent.setParticipants(filtered);
                     } else {
-                        continue; // вернуться к редактированию
+                        continue;
                     }
                 }
                 else {

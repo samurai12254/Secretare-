@@ -154,6 +154,84 @@ void CalendarWindow::buildCalendarUI()
 
     connect(calendar, &QCalendarWidget::clicked, this, &CalendarWindow::onDateClicked);
 }
+bool CalendarWindow::findFreeSlotForEvent(
+    QDate date,
+    int durationMinutes,
+    const QString& location,
+    const QVector<User*>& participants,
+    QTime& suggestedStart,
+    QTime& suggestedEnd,
+    const Event* ignoreEvent)
+{
+    // 1. Собираем все события этого дня
+    QVector<Event> dayEvents;
+    for (const Event& ev : events)
+    {
+        if (ignoreEvent && ev.getId() == ignoreEvent->getId())
+            continue;
+
+        if (ev.getStartTime().date() == date)
+            dayEvents.append(ev);
+    }
+
+    // 2. Создаём диапазон дня
+    QTime dayStart(8, 0);   // рабочий день можно менять
+    QTime dayEnd(20, 0);
+
+    QVector<QPair<QTime, QTime>> busy;
+
+    for (const Event& ev : dayEvents)
+    {
+        // Если локация та же — занята
+        if (ev.getLocation() == location)
+        {
+            busy.append({ ev.getStartTime().time(), ev.getEndTime().time() });
+            continue;
+        }
+
+        // Пересекаются участники?
+        for (User* p : participants)
+        {
+            for (User* ep : ev.getParticipants())
+            {
+                if (p && ep && p->GetId() == ep->GetId())
+                {
+                    busy.append({ ev.getStartTime().time(), ev.getEndTime().time() });
+                    break;
+                }
+            }
+        }
+    }
+
+    // 3. Добавим границы дня
+    busy.append({ dayEnd, dayEnd });  // чтобы было удобнее искать после последнего
+    busy.append({ dayStart, dayStart });
+
+    // 4. Отсортируем интервалы
+    std::sort(busy.begin(), busy.end(),
+              [](auto& a, auto& b){ return a.first < b.first; });
+
+    // 5. Проходим по промежуткам между занятиями
+    for (int i = 0; i < busy.size() - 1; ++i)
+    {
+        QTime gapStart = busy[i].second;
+        QTime gapEnd   = busy[i+1].first;
+
+        if (gapStart < dayStart) gapStart = dayStart;
+        if (gapEnd > dayEnd) gapEnd = dayEnd;
+
+        int gapMinutes = gapStart.secsTo(gapEnd) / 60;
+
+        if (gapMinutes >= durationMinutes)
+        {
+            suggestedStart = gapStart;
+            suggestedEnd = gapStart.addSecs(durationMinutes * 60);
+            return true; // слот найден
+        }
+    }
+
+    return false;
+}
 
 
 void CalendarWindow::onDateClicked(const QDate &date)
@@ -300,43 +378,79 @@ void CalendarWindow::onDateClicked(const QDate &date)
                         continue;
                     }
                     auto conflict = hasConflict(newEvent, &need_ev);
+
+
                     if (conflict.has_conflict != 0) {
                         cnt_conflicts++;
                         QString problem;
-                        if(conflict.has_conflict == 1){
-                            problem += "Эти пользователи уже заняты:\n";
-                            for(auto el : conflict.busyUser){
-                                problem += el + ", ";
-                            }
-                            problem += "Хотите удалить занятых участников и продолжить?";
-                            auto reply = QMessageBox::question(
-                                this,
-                                "Конфликт расписания",
-                                problem,
-                                QMessageBox::Yes | QMessageBox::No
-                                );
+                        QTime sStart, sEnd;
+                        bool slotFound = findFreeSlotForEvent(
+                            date,
+                            newDuration,
+                            locName,
+                            newEvent.getParticipants(),
+                            sStart,
+                            sEnd);
 
-                            if (reply == QMessageBox::Yes) {
-                                QVector<User*> filtered;
-                                for (User* u : newEvent.getParticipants()) {
-                                    bool is_bad = 0;
-                                    for(auto el : conflict.busyUser){
-                                        if(el == u->GetLogin()){
-                                            is_bad = 1;
+                        if (slotFound)
+                        {
+                            QString msg = QString(
+                                              "В событии обнаружены конфликты, есть доступное время:\n%1 — %2\n"
+                                              "Хотите перенести событие на этот интервал?")
+                                              .arg(sStart.toString("HH:mm"))
+                                              .arg(sEnd.toString("HH:mm"));
+
+                            auto reply2 = QMessageBox::question(
+                                this,
+                                "Свободный интервал найден",
+                                msg,
+                                QMessageBox::Yes | QMessageBox::No);
+
+                            if (reply2 == QMessageBox::Yes)
+                            {
+                                newEvent.setStartTime(QDateTime(date, sStart));
+                                newEvent.setEndTime(QDateTime(date, sEnd));
+                                add_event = true;
+                            }
+                        }
+                        if(!add_event){
+                            if(conflict.has_conflict == 1){
+                                problem += "Эти пользователи уже заняты:\n";
+                                for(auto el : conflict.busyUser){
+                                    problem += el + ", ";
+                                }
+                                problem += "Хотите удалить занятых участников и продолжить?";
+                                auto reply = QMessageBox::question(
+                                    this,
+                                    "Конфликт расписания",
+                                    problem,
+                                    QMessageBox::Yes | QMessageBox::No
+                                    );
+
+                                if (reply == QMessageBox::Yes) {
+                                    QVector<User*> filtered;
+                                    for (User* u : newEvent.getParticipants()) {
+                                        bool is_bad = 0;
+                                        for(auto el : conflict.busyUser){
+                                            if(el == u->GetLogin()){
+                                                is_bad = 1;
+                                            }
+                                        }
+                                        if(!is_bad){
+                                            filtered.push_back(u);
                                         }
                                     }
-                                    if(!is_bad){
-                                        filtered.push_back(u);
-                                    }
+                                    newEvent.setParticipants(filtered);
+                                } else {
+                                    continue; // вернуться к редактированию
                                 }
-                                newEvent.setParticipants(filtered);
-                            } else {
-                                continue; // вернуться к редактированию
                             }
-                        }else{
-                            continue;
+                            else {
+                                continue;
+                            }
                         }
                     }
+
 
                     for (Event &editable : events)
                     {
@@ -500,38 +614,71 @@ void CalendarWindow::addEvent(const QDate &date)
         if (conflict.has_conflict != 0) {
             cnt_conflicts++;
             QString problem;
-            if(conflict.has_conflict == 1){
-                problem += "Эти пользователи уже заняты:\n";
-                for(auto el : conflict.busyUser){
-                    problem += el + ", ";
-                }
-                problem += "Хотите удалить занятых участников и продолжить?";
-                auto reply = QMessageBox::question(
-                    this,
-                    "Конфликт расписания",
-                    problem,
-                    QMessageBox::Yes | QMessageBox::No
-                    );
+            QTime sStart, sEnd;
+            bool slotFound = findFreeSlotForEvent(
+                date,
+                durationMinutes,
+                locName,
+                newEvent.getParticipants(),
+                sStart,
+                sEnd);
 
-                if (reply == QMessageBox::Yes) {
-                    QVector<User*> filtered;
-                    for (User* u : newEvent.getParticipants()) {
-                        bool is_bad = 0;
-                        for(auto el : conflict.busyUser){
-                            if(el == u->GetLogin()){
-                                is_bad = 1;
+            if (slotFound)
+            {
+                QString msg = QString(
+                                  "В событии обнаружены конфликты, есть доступное время:\n%1 — %2\n"
+                                  "Хотите перенести событие на этот интервал?")
+                                  .arg(sStart.toString("HH:mm"))
+                                  .arg(sEnd.toString("HH:mm"));
+
+                auto reply2 = QMessageBox::question(
+                    this,
+                    "Свободный интервал найден",
+                    msg,
+                    QMessageBox::Yes | QMessageBox::No);
+
+                if (reply2 == QMessageBox::Yes)
+                {
+                    newEvent.setStartTime(QDateTime(date, sStart));
+                    newEvent.setEndTime(QDateTime(date, sEnd));
+                    add_event = true;
+                }
+            }
+            if(!add_event){
+                if(conflict.has_conflict == 1){
+                    problem += "Эти пользователи уже заняты:\n";
+                    for(auto el : conflict.busyUser){
+                        problem += el + ", ";
+                    }
+                    problem += "Хотите удалить занятых участников и продолжить?";
+                    auto reply = QMessageBox::question(
+                        this,
+                        "Конфликт расписания",
+                        problem,
+                        QMessageBox::Yes | QMessageBox::No
+                        );
+
+                    if (reply == QMessageBox::Yes) {
+                        QVector<User*> filtered;
+                        for (User* u : newEvent.getParticipants()) {
+                            bool is_bad = 0;
+                            for(auto el : conflict.busyUser){
+                                if(el == u->GetLogin()){
+                                    is_bad = 1;
+                                }
+                            }
+                            if(!is_bad){
+                                filtered.push_back(u);
                             }
                         }
-                        if(!is_bad){
-                            filtered.push_back(u);
-                        }
+                        newEvent.setParticipants(filtered);
+                    } else {
+                        continue; // вернуться к редактированию
                     }
-                    newEvent.setParticipants(filtered);
-                } else {
-                    continue; // вернуться к редактированию
                 }
-            }else{
-                continue;
+                else {
+                    continue;
+                }
             }
         }
         events.append(newEvent);

@@ -25,6 +25,15 @@ public:
     QVector <QString> GetAllFinishEvents();
     QVector <QString> GetAllDeleteEvents();
     QVector <QString> GetAllLocation();
+    bool findFreeSlotForEvent(
+        QDate date,
+        int durationMinutes,
+        const QString& location,
+        const QVector<User*>& participants,
+        QTime& suggestedStart,
+        QTime& suggestedEnd,
+        const Event* ignoreEvent = nullptr);
+
 
 private slots:
     void onDateClicked(const QDate &date);
